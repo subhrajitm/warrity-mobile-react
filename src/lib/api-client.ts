@@ -1,7 +1,7 @@
 import type { ApiErrorResponse } from '@/types';
 
 // Use the proxied API endpoint
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'https://warrityweb-api-x1ev.onrender.com/api';
 
 interface RequestOptions extends RequestInit {
   data?: unknown;
