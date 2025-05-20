@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="192px" height="192px" viewBox="0 0 192 192" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <title>Warrity Icon</title>
-    <g id="Icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <circle id="Background" fill="#1F2937" cx="96" cy="96" r="96"></circle>
-        <path d="M96,40 C122.510,40 144,61.49 144,88 C144,114.51 122.510,136 96,136 C69.49,136 48,114.51 48,88 C48,61.49 69.49,40 96,40 Z" id="Circle" stroke="#84CC16" stroke-width="8"></path>
-        <path d="M96,56 L116,96 L76,96 L96,56 Z" id="Triangle" fill="#84CC16" fill-rule="nonzero"></path>
-        <path d="M96,116 L76,76 L116,76 L96,116 Z" id="Triangle-Copy" fill="#84CC16" fill-rule="nonzero"></path>
-    </g>
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" fill="#4CAF50"/>
+  <path d="M96 48C68.4 48 46 70.4 46 98C46 125.6 68.4 148 96 148C123.6 148 146 125.6 146 98C146 70.4 123.6 48 96 48ZM96 136C75.2 136 58 118.8 58 98C58 77.2 75.2 60 96 60C116.8 60 134 77.2 134 98C134 118.8 116.8 136 96 136Z" fill="white"/>
+  <path d="M96 72C83.9 72 74 81.9 74 94C74 106.1 83.9 116 96 116C108.1 116 118 106.1 118 94C118 81.9 108.1 72 96 72ZM96 108C89.4 108 84 102.6 84 96C84 89.4 89.4 84 96 84C102.6 84 108 89.4 108 96C108 102.6 102.6 108 96 108Z" fill="white"/>
 </svg>

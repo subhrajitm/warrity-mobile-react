@@ -23,10 +23,19 @@ const nextConfig = {
   env: {
     DEPLOYMENT_ID: process.env.DEPLOYMENT_ID || 'local-deployment',
   },
-  async headers() {
+  async rewrites() {
     return [
       {
         source: '/api/:path*',
+        destination: 'https://warrityweb-api-x1ev.onrender.com/api/:path*',
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        // Apply these headers to all routes
+        source: '/:path*',
         headers: [
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
           { key: 'Access-Control-Allow-Origin', value: '*' },
