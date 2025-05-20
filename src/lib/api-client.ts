@@ -20,9 +20,11 @@ async function apiClient<T>(
   const config: RequestInit = {
     method: data ? 'POST' : 'GET',
     body: data ? JSON.stringify(data) : null,
+    credentials: 'include',
     ...customConfig,
     headers: {
       'Content-Type': data ? 'application/json' : '',
+      'Accept': 'application/json',
       ...customHeaders,
     },
   };
@@ -35,30 +37,36 @@ async function apiClient<T>(
     delete (config.headers as Record<string, string>)['Content-Type'];
   }
 
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-
-  if (!response.ok) {
-    const errorData: ApiErrorResponse = await response.json().catch(() => ({
+    if (!response.ok) {
+      const errorData: ApiErrorResponse = await response.json().catch(() => ({
         message: `HTTP error! status: ${response.status} ${response.statusText} on ${endpoint}`,
-    }));
+      }));
+      
+      // Log the error for easier debugging
+      console.error(`API Error (${response.status}) on ${endpoint}:`, errorData);
+
+      // Create a proper ApiError object with the required properties
+      const error = new Error(errorData.message || 'An unknown API error occurred') as ApiError;
+      error.status = response.status;
+      error.data = errorData;
+      throw error;
+    }
+
+    // Handle cases where response might be empty (e.g., 204 No Content for DELETE)
+    if (response.status === 204 || response.headers.get('content-length') === '0') {
+      return undefined as T; 
+    }
     
-    // Log the error for easier debugging
-    console.error(`API Error (${response.status}) on ${endpoint}:`, errorData);
-
-    // Create a proper ApiError object with the required properties
-    const error = new Error(errorData.message || 'An unknown API error occurred') as ApiError;
-    error.status = response.status;
-    error.data = errorData;
-    throw error;
+    return response.json();
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('An unexpected error occurred');
   }
-
-  // Handle cases where response might be empty (e.g., 204 No Content for DELETE)
-  if (response.status === 204 || response.headers.get('content-length') === '0') {
-    return undefined as T; 
-  }
-  
-  return response.json();
 }
 
 export default apiClient;
