@@ -203,7 +203,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (isAuthenticated && token) {
       fetchEvents();
     }
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated, token, fetchEvents]);
 
   const value = {
     events,

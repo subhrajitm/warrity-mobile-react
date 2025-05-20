@@ -135,10 +135,11 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
           setCurrentPage(page);
           return; // Success, exit early
         }
-      } catch (apiErr: any) {
+      } catch (apiErr: unknown) {
         // Check for rate limiting (429) or server errors (5xx)
-        if (apiErr.status === 429 || (apiErr.status >= 500 && apiErr.status < 600)) {
-          console.warn(`API error (${apiErr.status}) when fetching products, using fallback data`);
+        const err = apiErr as { status?: number };
+        if (err.status === 429 || (err.status && err.status >= 500 && err.status < 600)) {
+          console.warn(`API error (${err.status}) when fetching products, using fallback data`);
           // Will continue to fallback
         } else {
           // For other errors, rethrow to be caught by the outer catch
@@ -311,10 +312,11 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (product && product._id) {
           return product;
         }
-      } catch (apiErr: any) {
+      } catch (apiErr: unknown) {
         // Check for rate limiting (429) or server errors (5xx)
-        if (apiErr.status === 429 || (apiErr.status >= 500 && apiErr.status < 600)) {
-          console.warn(`API error (${apiErr.status}) when fetching product with ID ${id}, using fallback data`);
+        const err = apiErr as { status?: number };
+        if (err.status === 429 || (err.status && err.status >= 500 && err.status < 600)) {
+          console.warn(`API error (${err.status}) when fetching product with ID ${id}, using fallback data`);
           // Will continue to fallback
         } else {
           // For other errors, rethrow to be caught by the outer catch
@@ -356,7 +358,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-  }, []);
+  }, [fetchProducts, fetchCategories]);
 
   const value = {
     products,

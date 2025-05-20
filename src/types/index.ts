@@ -39,6 +39,15 @@ export interface Product {
   brand?: string;
   modelNumber?: string;
   imageUrl?: string;
+  manufacturer?: string;
+  price?: number;
+  discountPrice?: number;
+  features?: string[];
+  specifications?: {
+    name: string;
+    value: string;
+  }[];
+  relatedProducts?: Product[];
   createdAt: string;
   updatedAt: string;
 }

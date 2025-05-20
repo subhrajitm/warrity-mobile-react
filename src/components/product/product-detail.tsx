@@ -59,11 +59,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
   }, [productError, serviceError, toast]);
   
   // Format price for display
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | undefined) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(price);
+    }).format(price || 0);
   };
   
   if (isProductLoading) {
@@ -114,17 +114,17 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
             <h1 className="text-3xl font-bold">{product.name}</h1>
             <div className="flex items-center gap-2 mt-2">
               <Badge variant="outline">{product.category}</Badge>
-              <span className="text-muted-foreground">by {product.manufacturer}</span>
+              <span className="text-muted-foreground">by {product.manufacturer || 'Unknown Manufacturer'}</span>
             </div>
           </div>
           
           <div className="mb-6">
-            <div className="text-3xl font-bold">{formatPrice(product.price)}</div>
+            <div className="text-3xl font-bold">{formatPrice(product.price || 0)}</div>
             {product.discountPrice && (
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-muted-foreground line-through">{formatPrice(product.price)}</span>
+                <span className="text-muted-foreground line-through">{formatPrice(product.price || 0)}</span>
                 <Badge variant="destructive">
-                  {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
+                  {Math.round((((product.price || 0) - (product.discountPrice || 0)) / (product.price || 1)) * 100)}% OFF
                 </Badge>
               </div>
             )}
@@ -141,7 +141,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
             <div className="mb-6">
               <h2 className="text-lg font-medium mb-2">Key Features</h2>
               <ul className="list-disc list-inside space-y-1">
-                {product.features.map((feature, index) => (
+                {product.features.map((feature: string, index: number) => (
                   <li key={index} className="text-muted-foreground">{feature}</li>
                 ))}
               </ul>
@@ -352,7 +352,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
         <div className="mt-12">
           <h2 className="text-2xl font-bold mb-6">Related Products</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {product.relatedProducts.map((relatedProduct) => (
+            {product.relatedProducts.map((relatedProduct: Product) => (
               <Card key={relatedProduct._id} className="h-full flex flex-col">
                 <div className="aspect-square relative bg-muted">
                   {relatedProduct.imageUrl ? (

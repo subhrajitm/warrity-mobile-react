@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import apiClient from '@/lib/api-client';
 import { Warranty } from '@/types';
@@ -32,7 +31,6 @@ export const WarrantyProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [currentPage, setCurrentPage] = useState<number>(1);
   
   const { token, isAuthenticated } = useAuth();
-  const router = useRouter();
 
   // Fetch warranties with pagination and filtering
   const fetchWarranties = async (
@@ -274,7 +272,7 @@ export const WarrantyProvider: React.FC<{ children: ReactNode }> = ({ children }
       fetchWarranties();
       fetchExpiringWarranties();
     }
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated, token, fetchWarranties, fetchExpiringWarranties]);
 
   const value = {
     warranties,

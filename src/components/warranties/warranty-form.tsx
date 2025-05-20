@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, UploadCloud, Sparkles, Loader2, FileText, AlignLeft } from 'lucide-react';
@@ -370,24 +372,16 @@ export function WarrantyForm({ initialData, onSubmitSuccess }: WarrantyFormProps
             )}
 
             {extractedSummary && !isSummarizing && (
-              <FormField
-                name="aiSummaryDisplay" // Not part of form submission, just for display
-                control={form.control} // Needs to be part of form for RHF structure, but won't be submitted
-                render={() => (
-                  <FormItem>
-                    <FormLabel>AI Generated Summary</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        readOnly
-                        value={extractedSummary}
-                        className="bg-muted/50"
-                        rows={6}
-                      />
-                    </FormControl>
-                    <FormDescription>This summary is AI-generated. Please review for accuracy.</FormDescription>
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <FormLabel>AI Generated Summary</FormLabel>
+                <Textarea
+                  readOnly
+                  value={extractedSummary}
+                  className="bg-muted/50 w-full"
+                  rows={6}
+                />
+                <FormDescription>This summary is AI-generated. Please review for accuracy.</FormDescription>
+              </div>
             )}
 
 

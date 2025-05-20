@@ -14,11 +14,14 @@ interface CalendarEvent {
   updatedAt: string;
 }
 
+type RouteContext = {
+  params: {
+    id: string;
+  };
+};
+
 // GET /api/calendar/events/:id - Get calendar event details
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: RouteContext) {
   try {
     // Get authentication token from cookies or headers
     const authHeader = request.headers.get('authorization');
@@ -47,10 +50,7 @@ export async function GET(
 }
 
 // PUT /api/calendar/events/:id - Update calendar event
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: RouteContext) {
   try {
     // Get authentication token from cookies or headers
     const authHeader = request.headers.get('authorization');
@@ -86,10 +86,7 @@ export async function PUT(
 }
 
 // DELETE /api/calendar/events/:id - Delete calendar event
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: RouteContext) {
   try {
     // Get authentication token from cookies or headers
     const authHeader = request.headers.get('authorization');
