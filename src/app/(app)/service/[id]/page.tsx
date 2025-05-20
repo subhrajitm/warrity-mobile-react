@@ -11,12 +11,33 @@ import { useToast } from '@/hooks/use-toast';
 import { PhoneIcon, MailIcon, GlobeIcon, MapPinIcon, ClockIcon } from 'lucide-react';
 import Link from 'next/link';
 
+interface ContactInfo {
+  phone?: string;
+  email?: string;
+  website?: string;
+}
+
+interface OperatingHours {
+  [key: string]: string;
+}
+
+interface ServiceData {
+  _id: string;
+  name: string;
+  company: string;
+  serviceType: string;
+  description: string;
+  serviceAreas?: string[];
+  operatingHours?: OperatingHours;
+  contactInfo?: ContactInfo;
+}
+
 function ServiceDetailContent() {
   const params = useParams();
   const serviceId = params.id as string;
   const { serviceInfo, isLoading, error, fetchServiceInfo } = useService();
   const { toast } = useToast();
-  const [service, setService] = useState<any | null>(null);
+  const [service, setService] = useState<ServiceData | null>(null);
 
   useEffect(() => {
     fetchServiceInfo();

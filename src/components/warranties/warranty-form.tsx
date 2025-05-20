@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -17,11 +16,13 @@ import { cn, fileToDataUri } from '@/lib/utils';
 import { format, parseISO, isValid } from 'date-fns';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import type { Warranty, WarrantyFormValues, UploadResponse, ExtractedWarrantyDetails } from '@/types';
+import type { Warranty, WarrantyFormValues, UploadResponse } from '@/types';
 import apiClient from '@/lib/api-client';
 import { extractWarrantyDetails } from '@/ai/flows/extract-warranty-details'; 
 import { summarizeWarrantyDocument } from '@/ai/flows/summarize-warranty-document-flow';
 import Image from 'next/image';
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const warrantyFormSchema = z.object({
   productName: z.string().min(1, "Product name is required."),
@@ -34,6 +35,7 @@ const warrantyFormSchema = z.object({
   category: z.string().optional(),
   retailer: z.string().optional(),
   purchasePrice: z.coerce.number().positive().optional(),
+  aiSummaryDisplay: z.string().optional(),
 }).refine(data => data.warrantyLength || data.warrantyEndDate, {
   message: "Either warranty length or end date must be provided.",
   path: ["warrantyEndDate"], 

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
@@ -191,12 +190,6 @@ export default function DashboardPage() {
   const showExpiringSectionContent = expiringWarranties && expiringWarranties.length > 0;
   const showAllClearMessage = expiringWarranties && expiringWarranties.length === 0 && !isLoadingExpiring;
   const showActiveWarrantiesContent = activeWarranties && activeWarranties.length > 0;
-
-  const dashboardActions = [
-    { label: 'Add New', icon: PlusCircle, href: '/warranties/new' },
-    { label: 'Expiring', icon: AlertTriangle, href: '#expiring-soon' },
-    { label: 'All Items', icon: List, href: '#all-active' },
-  ];
 
   return (
     <div className="pb-20">

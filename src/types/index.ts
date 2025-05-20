@@ -1,5 +1,3 @@
-
-
 export interface User {
   _id: string;
   username: string;
@@ -17,6 +15,8 @@ export interface Warranty {
   productBrand?: string;
   productCategory?: string;
   productId?: string;
+  productModel?: string;
+  serialNumber?: string;
   purchaseDate: string; // ISO Date string
   warrantyLength: number; // in months or a duration string
   expiryDate: string; // ISO Date string for expiry
@@ -24,9 +24,12 @@ export interface Warranty {
   notes?: string;
   documentUrl?: string; // URL to the uploaded document
   warrantyImage?: string; // URL to warranty image
+  receiptImage?: string; // URL to receipt image
   category?: string;
   retailer?: string;
   purchasePrice?: number;
+  warrantyProvider?: string;
+  warrantyTerms?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -79,6 +82,7 @@ export interface WarrantyFormValues {
   category?: string;
   retailer?: string;
   purchasePrice?: number;
+  aiSummaryDisplay?: string;
 }
 
 // Interface for user profile form values

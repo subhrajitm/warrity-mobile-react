@@ -39,6 +39,17 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
         if (warrantyData.productId) {
           fetchProductServiceInfo(warrantyData.productId);
         }
+        toast({
+          title: "Success",
+          description: "Warranty details loaded successfully",
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load warranty details",
+          variant: "destructive"
+        });
       }
     };
     
@@ -75,10 +86,10 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
     const daysLeft = differenceInDays(expiryDate, today);
     
     if (daysLeft <= 30) {
-      return <Badge variant="warning">Expiring Soon</Badge>;
+      return <Badge variant="secondary">Expiring Soon</Badge>;
     }
     
-    return <Badge variant="success">Active</Badge>;
+    return <Badge variant="default">Active</Badge>;
   };
   
   // Format date for display
@@ -426,14 +437,14 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
                               </div>
                             )}
                             <div>
-                              <span className="font-medium">Website:</span>{' '}
+                              <span className="font-medium">Website:</span>
                               <a 
                                 href={productServiceInfo.contactInformation.website} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="text-primary hover:underline"
                               >
-                                {productServiceInfo.contactInformation.website}
+                                {productServiceInfo.contactInformation.website.replace(/^https?:\/\//, '')}
                               </a>
                             </div>
                           </div>

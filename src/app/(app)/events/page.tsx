@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api-client';
-import { Calendar, Clock, Plus, Trash2, Edit, Search, Filter, Tag } from 'lucide-react';
+import { Calendar, Clock, Plus, Trash2, Edit, Search } from 'lucide-react';
 import { format, parseISO, isBefore, isToday, isFuture } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
 
 interface Event {
@@ -24,6 +24,7 @@ interface Event {
   userId: string;
   createdAt: string;
   updatedAt: string;
+  type?: string;
 }
 
 export default function EventsPage() {
@@ -139,7 +140,7 @@ export default function EventsPage() {
                     <CardTitle className="text-base font-medium">{event.title}</CardTitle>
                     <Badge 
                       variant="outline" 
-                      className={`mt-1 text-xs ${getEventTypeColor(event.type)}`}
+                      className={`mt-1 text-xs ${getEventTypeColor(event.type || '')}`}
                     >
                       {event.type || 'Event'}
                     </Badge>
