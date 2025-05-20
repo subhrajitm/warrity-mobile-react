@@ -1,4 +1,4 @@
-# **App Name**: Warranty Wallet
+# **App Name**: Warrity
 
 ## Core Features:
 
