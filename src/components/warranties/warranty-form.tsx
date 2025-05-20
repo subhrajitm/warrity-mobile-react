@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, UploadCloud, Sparkles, Loader2, FileText, AlignLeft } from 'lucide-react';
+import { CalendarIcon, Sparkles, Loader2, FileText, AlignLeft } from 'lucide-react';
 import { cn, fileToDataUri } from '@/lib/utils';
 import { format, parseISO, isValid } from 'date-fns';
 import { useAuth } from '@/contexts/auth-context';
@@ -323,7 +323,7 @@ export function WarrantyForm({ initialData, onSubmitSuccess }: WarrantyFormProps
             <FormField
               control={form.control}
               name="document"
-              render={({ field }) => ( /* field is not directly used for input type file with react-hook-form custom register */
+              render={() => (
                 <FormItem>
                   <FormLabel>Warranty Document (Optional)</FormLabel>
                   <FormControl>

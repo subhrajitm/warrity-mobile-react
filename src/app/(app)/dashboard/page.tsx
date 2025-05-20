@@ -7,7 +7,7 @@ import type { Warranty } from '@/types';
 import { WarrantyListItem } from '@/components/warranties/warranty-list-item';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { PlusCircle, AlertTriangle, List, ShieldX, Loader2, ShieldCheck, Info, Zap, FileText, ShoppingBag, Wrench, Calendar, Bell, TrendingUp, Clock, DollarSign, BarChart3 } from 'lucide-react';
+import { PlusCircle, List, ShieldX, Loader2, ShieldCheck, Info, Zap, Calendar, Clock, DollarSign, BarChart3 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import {

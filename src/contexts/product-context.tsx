@@ -16,6 +16,26 @@ interface ProductContextType {
   getProductById: (id: string) => Promise<Product | null>;
 }
 
+interface ProductServiceInfo {
+  warrantyTerms?: {
+    duration: string;
+    coverage: string;
+    conditions: string[];
+  };
+  serviceCenters?: Array<{
+    name: string;
+    address: string;
+    phone: string;
+    email?: string;
+    hours?: string;
+  }>;
+  contactInformation?: {
+    customerService: string;
+    technicalSupport?: string;
+    website: string;
+  };
+}
+
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -135,10 +155,11 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
           setCurrentPage(page);
           return; // Success, exit early
         }
-      } catch (apiErr: any) {
+      } catch (apiErr: unknown) {
+        const error = apiErr as { status?: number };
         // Check for rate limiting (429) or server errors (5xx)
-        if (apiErr.status === 429 || (apiErr.status >= 500 && apiErr.status < 600)) {
-          console.warn(`API error (${apiErr.status}) when fetching products, using fallback data`);
+        if (error.status === 429 || (error.status && error.status >= 500 && error.status < 600)) {
+          console.warn(`API error (${error.status}) when fetching products, using fallback data`);
           // Will continue to fallback
         } else {
           // For other errors, rethrow to be caught by the outer catch
@@ -311,10 +332,11 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (product && product._id) {
           return product;
         }
-      } catch (apiErr: any) {
+      } catch (apiErr: unknown) {
+        const error = apiErr as { status?: number };
         // Check for rate limiting (429) or server errors (5xx)
-        if (apiErr.status === 429 || (apiErr.status >= 500 && apiErr.status < 600)) {
-          console.warn(`API error (${apiErr.status}) when fetching product with ID ${id}, using fallback data`);
+        if (error.status === 429 || (error.status && error.status >= 500 && error.status < 600)) {
+          console.warn(`API error (${error.status}) when fetching product with ID ${id}, using fallback data`);
           // Will continue to fallback
         } else {
           // For other errors, rethrow to be caught by the outer catch
@@ -349,6 +371,30 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
       return null;
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchProductServiceInfo = async (productId: string): Promise<ProductServiceInfo | null> => {
+    try {
+      const response = await apiClient<ProductServiceInfo>(`/products/${productId}/service`, { token });
+      return response;
+    } catch (error) {
+      console.error('Error fetching product service info:', error);
+      return null;
+    }
+  };
+
+  const updateProductServiceInfo = async (productId: string, data: Partial<ProductServiceInfo>): Promise<ProductServiceInfo | null> => {
+    try {
+      const response = await apiClient<ProductServiceInfo>(`/products/${productId}/service`, {
+        method: 'PUT',
+        data,
+        token,
+      });
+      return response;
+    } catch (error) {
+      console.error('Error updating product service info:', error);
+      return null;
     }
   };
 

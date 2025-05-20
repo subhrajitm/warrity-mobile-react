@@ -14,6 +14,7 @@ import { CalendarIcon, FileIcon, InfoIcon, TrashIcon, PencilIcon, ClockIcon, Cal
 import { format, differenceInDays, isBefore, formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import { Warranty } from '@/types';
+import Image from 'next/image';
 
 interface WarrantyDetailProps {
   warrantyId: string;
@@ -54,7 +55,7 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
     };
     
     loadWarrantyDetails();
-  }, [warrantyId]);
+  }, [warrantyId, getWarrantyById, fetchProductServiceInfo, toast]);
   
   // Show error toast if there's an error
   useEffect(() => {
@@ -475,9 +476,11 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
                       <CardContent>
                         {warranty.receiptImage ? (
                           <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
-                            <img 
-                              src={warranty.receiptImage ? `/api/proxy/${warranty.receiptImage.replace(/^https?:\/\/[^\/]+\//, '')}` : ''} 
+                            <Image 
+                              src={warranty.receiptImage ? `/api/proxy/${warranty.receiptImage.replace(/^https?:\/\/[^/]+\//, '')}` : ''} 
                               alt="Receipt" 
+                              width={800}
+                              height={600}
                               className="max-h-full max-w-full object-contain"
                             />
                           </div>
@@ -491,7 +494,7 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
                       <CardFooter>
                         {warranty.receiptImage && (
                           <a 
-                            href={warranty.receiptImage ? `/api/proxy/${warranty.receiptImage.replace(/^https?:\/\/[^\/]+\//, '')}` : ''} 
+                            href={warranty.receiptImage ? `/api/proxy/${warranty.receiptImage.replace(/^https?:\/\/[^/]+\//, '')}` : ''} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="w-full"
@@ -511,9 +514,11 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
                       <CardContent>
                         {warranty.warrantyImage ? (
                           <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
-                            <img 
-                              src={warranty.warrantyImage ? `/api/proxy/${warranty.warrantyImage.replace(/^https?:\/\/[^\/]+\//, '')}` : ''} 
+                            <Image 
+                              src={warranty.warrantyImage ? `/api/proxy/${warranty.warrantyImage.replace(/^https?:\/\/[^/]+\//, '')}` : ''} 
                               alt="Warranty Document" 
+                              width={800}
+                              height={600}
                               className="max-h-full max-w-full object-contain"
                             />
                           </div>
@@ -527,7 +532,7 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
                       <CardFooter>
                         {warranty.warrantyImage && (
                           <a 
-                            href={warranty.warrantyImage ? `/api/proxy/${warranty.warrantyImage.replace(/^https?:\/\/[^\/]+\//, '')}` : ''} 
+                            href={warranty.warrantyImage ? `/api/proxy/${warranty.warrantyImage.replace(/^https?:\/\/[^/]+\//, '')}` : ''} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="w-full"
