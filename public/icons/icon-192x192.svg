@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="192px" height="192px" viewBox="0 0 192 192" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>Warrity Icon</title>
+    <g id="Icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle id="Background" fill="#1F2937" cx="96" cy="96" r="96"></circle>
+        <path d="M96,40 C122.510,40 144,61.49 144,88 C144,114.51 122.510,136 96,136 C69.49,136 48,114.51 48,88 C48,61.49 69.49,40 96,40 Z" id="Circle" stroke="#84CC16" stroke-width="8"></path>
+        <path d="M96,56 L116,96 L76,96 L96,56 Z" id="Triangle" fill="#84CC16" fill-rule="nonzero"></path>
+        <path d="M96,116 L76,76 L116,76 L96,116 Z" id="Triangle-Copy" fill="#84CC16" fill-rule="nonzero"></path>
+    </g>
+</svg>
