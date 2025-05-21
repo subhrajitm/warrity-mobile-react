@@ -32,20 +32,39 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
   
   // Fetch warranty details when component mounts
   useEffect(() => {
+    let isMounted = true;
+    setWarranty(null); // Reset warranty state when ID changes
+    
     const loadWarrantyDetails = async () => {
-      const warrantyData = await getWarrantyById(warrantyId);
-      if (warrantyData) {
-        setWarranty(warrantyData);
-        // If warranty has product information, fetch service info
-        if (warrantyData.productId) {
-          fetchProductServiceInfo(warrantyData.productId);
+      try {
+        const warrantyData = await getWarrantyById(warrantyId);
+        
+        // Check if component is still mounted before updating state
+        if (!isMounted) return;
+        
+        if (warrantyData) {
+          setWarranty(warrantyData);
+          // If warranty has product information, fetch service info
+          if (warrantyData.productId) {
+            fetchProductServiceInfo(warrantyData.productId);
+          }
+          toast({
+            title: "Success",
+            description: "Warranty details loaded successfully",
+            variant: "default"
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to load warranty details",
+            variant: "destructive"
+          });
         }
-        toast({
-          title: "Success",
-          description: "Warranty details loaded successfully",
-          variant: "default"
-        });
-      } else {
+      } catch (err) {
+        // Check if component is still mounted before updating state
+        if (!isMounted) return;
+        
+        console.error('Error loading warranty details:', err);
         toast({
           title: "Error",
           description: "Failed to load warranty details",
@@ -55,7 +74,12 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
     };
     
     loadWarrantyDetails();
-  }, [warrantyId, getWarrantyById, fetchProductServiceInfo, toast]);
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
+  }, [warrantyId]); // Only depend on warrantyId to prevent infinite loops
   
   // Show error toast if there's an error
   useEffect(() => {
@@ -477,7 +501,7 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
                         {warranty.receiptImage ? (
                           <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
                             <Image 
-                              src={warranty.receiptImage ? `/api/proxy/${warranty.receiptImage.replace(/^https?:\/\/[^/]+\//, '')}` : ''} 
+                              src={`/api/proxy/${encodeURIComponent(warranty.receiptImage.replace(/^https?:\/\/[^/]+\//, ''))}`} 
                               alt="Receipt" 
                               width={800}
                               height={600}
@@ -494,7 +518,7 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
                       <CardFooter>
                         {warranty.receiptImage && (
                           <a 
-                            href={warranty.receiptImage ? `/api/proxy/${warranty.receiptImage.replace(/^https?:\/\/[^/]+\//, '')}` : ''} 
+                            href={`/api/proxy/${encodeURIComponent(warranty.receiptImage.replace(/^https?:\/\/[^/]+\//, ''))}`} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="w-full"
@@ -515,7 +539,7 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
                         {warranty.warrantyImage ? (
                           <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
                             <Image 
-                              src={warranty.warrantyImage ? `/api/proxy/${warranty.warrantyImage.replace(/^https?:\/\/[^/]+\//, '')}` : ''} 
+                              src={`/api/proxy/${encodeURIComponent(warranty.warrantyImage.replace(/^https?:\/\/[^/]+\//, ''))}`} 
                               alt="Warranty Document" 
                               width={800}
                               height={600}
@@ -532,7 +556,7 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
                       <CardFooter>
                         {warranty.warrantyImage && (
                           <a 
-                            href={warranty.warrantyImage ? `/api/proxy/${warranty.warrantyImage.replace(/^https?:\/\/[^/]+\//, '')}` : ''} 
+                            href={`/api/proxy/${encodeURIComponent(warranty.warrantyImage.replace(/^https?:\/\/[^/]+\//, ''))}`} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="w-full"
