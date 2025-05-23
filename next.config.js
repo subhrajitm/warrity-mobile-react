@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['warrityweb-api-x1ev.onrender.com'],
+    domains: ['warrity-api-800252372993.asia-south1.run.app'],
   },
   // Disable TypeScript and ESLint errors during build
   typescript: {
@@ -27,7 +27,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'https://warrityweb-api-x1ev.onrender.com/api/:path*',
+        destination: 'https://warrity-api-800252372993.asia-south1.run.app/api/:path*',
       },
     ];
   },
