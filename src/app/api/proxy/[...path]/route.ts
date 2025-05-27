@@ -14,67 +14,41 @@ export async function GET(
     // Get the full URL from the request to handle both relative and absolute paths
     let url = '';
     
+    // Determine if we're in development mode
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
+    // Use localhost in development, production URL otherwise
+    const API_BASE_URL = isDevelopment 
+      ? 'http://localhost:5001'
+      : 'https://warrity-api-800252372993.asia-south1.run.app';
+    
     // If the path already contains the full URL, use it directly
-    if (path.includes('warrityweb-api-x1ev.onrender.com')) {
+    if (path.includes('warrity-api-800252372993.asia-south1.run.app') || path.includes('localhost:5001')) {
       url = path;
     } else {
       // Otherwise, construct the URL to the external API
-      url = `https://warrityweb-api-x1ev.onrender.com/${path}`;
+      url = `${API_BASE_URL}/${path}`;
     }
     
     console.log(`Proxying request to: ${url}`);
     
-    // Fetch the resource from the external API
+    // Forward the request to the target URL
     const response = await fetch(url, {
-      headers: {
-        // Forward any authorization headers if needed
-        ...(request.headers.get('authorization') 
-          ? { 'Authorization': request.headers.get('authorization')! } 
-          : {}),
-      },
-      cache: 'no-store', // Ensure we're not using cache
+      headers: request.headers,
+      method: request.method,
     });
     
-    // If the resource doesn't exist, return a 404
-    if (!response.ok) {
-      console.error(`Proxy error: ${response.status} ${response.statusText} for ${url}`);
-      return new NextResponse(null, { status: response.status });
-    }
-    
-    // Get the content type from the response
-    const contentType = response.headers.get('content-type') || '';
-    
-    // Get the response body as an array buffer
-    const buffer = await response.arrayBuffer();
-    
-    // Create a new response with the same body
-    const newResponse = new NextResponse(buffer, {
+    // Return the response
+    return new NextResponse(response.body, {
       status: response.status,
       statusText: response.statusText,
-      headers: {
-        'Content-Type': contentType,
-        'Access-Control-Allow-Origin': '*', // Allow all origins
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
-      },
+      headers: response.headers,
     });
-    
-    return newResponse;
   } catch (error) {
     console.error('Proxy error:', error);
-    return new NextResponse(null, { status: 500 });
+    return new NextResponse(JSON.stringify({ error: 'Proxy error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
-}
-
-// Handle OPTIONS requests for CORS preflight
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Max-Age': '86400',
-    },
-  });
 }

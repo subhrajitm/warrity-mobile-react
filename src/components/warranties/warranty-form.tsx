@@ -152,7 +152,13 @@ export function WarrantyForm({ initialData, onSubmitSuccess }: WarrantyFormProps
           body: formData,
           token,
         });
-        const API_HOST_URL = 'https://warrityweb-api-x1ev.onrender.com';
+        // Determine if we're in development mode
+        const isDevelopment = process.env.NODE_ENV === 'development';
+        
+        // Use localhost in development, production URL otherwise
+        const API_HOST_URL = isDevelopment 
+          ? 'http://localhost:5001'
+          : 'https://warrity-api-800252372993.asia-south1.run.app';
         documentUrl = API_HOST_URL + uploadResponse.filePath;
       } catch (error) {
         toast({ title: "File Upload Failed", description: (error as Error).message, variant: "destructive" });

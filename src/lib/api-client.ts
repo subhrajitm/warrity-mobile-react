@@ -1,7 +1,12 @@
 import type { ApiErrorResponse } from '@/types';
 
-// Use the proxied API endpoint
-const API_BASE_URL = 'https://warrityweb-api-x1ev.onrender.com/api';
+// Determine if we're in development mode
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+// Use localhost in development, production URL otherwise
+const API_BASE_URL = isDevelopment 
+  ? 'http://localhost:5001/api'
+  : 'https://warrity-api-800252372993.asia-south1.run.app/api';
 
 interface RequestOptions extends RequestInit {
   data?: unknown;
@@ -20,13 +25,14 @@ async function apiClient<T>(
   const config: RequestInit = {
     method: data ? 'POST' : 'GET',
     body: data ? JSON.stringify(data) : null,
-    credentials: 'include',
     ...customConfig,
     headers: {
       'Content-Type': data ? 'application/json' : '',
       'Accept': 'application/json',
       ...customHeaders,
     },
+    // Add timeout configuration
+    signal: AbortSignal.timeout(30000), // 30 second timeout
   };
 
   if (token) {
@@ -45,8 +51,13 @@ async function apiClient<T>(
         message: `HTTP error! status: ${response.status} ${response.statusText} on ${endpoint}`,
       }));
       
-      // Log the error for easier debugging
-      console.error(`API Error (${response.status}) on ${endpoint}:`, errorData);
+      // Enhanced error logging
+      console.error(`API Error (${response.status}) on ${endpoint}:`, {
+        error: errorData,
+        endpoint,
+        status: response.status,
+        statusText: response.statusText
+      });
 
       // Create a proper ApiError object with the required properties
       const error = new Error(errorData.message || 'An unknown API error occurred') as ApiError;
@@ -63,6 +74,13 @@ async function apiClient<T>(
     return response.json();
   } catch (error) {
     if (error instanceof Error) {
+      // Enhanced error handling for timeout
+      if (error.name === 'AbortError') {
+        const timeoutError = new Error('Request timed out. Please try again.') as ApiError;
+        timeoutError.status = 408;
+        timeoutError.data = { message: 'Request timed out' };
+        throw timeoutError;
+      }
       throw error;
     }
     throw new Error('An unexpected error occurred');

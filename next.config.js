@@ -22,12 +22,17 @@ const nextConfig = {
   },
   env: {
     DEPLOYMENT_ID: process.env.DEPLOYMENT_ID || 'local-deployment',
+    deploymentId: process.env.DEPLOYMENT_ID || 'local-deployment',
   },
   async rewrites() {
+    const isLocal = process.env.NODE_ENV === 'development';
+    
     return [
       {
         source: '/api/:path*',
-        destination: 'https://warrity-api-800252372993.asia-south1.run.app/api/:path*',
+        destination: isLocal 
+          ? 'http://localhost:5001/api/:path*' 
+          : 'https://warrity-api-800252372993.asia-south1.run.app/api/:path*',
       },
     ];
   },
@@ -38,12 +43,25 @@ const nextConfig = {
         source: '/:path*',
         headers: [
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Origin', value: 'http://localhost:3000' },
           { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
           { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization' },
         ],
       },
     ];
+  },
+  // Add experimental features for better performance
+  experimental: {
+    serverActions: true,
+    serverComponentsExternalPackages: ['mongoose'],
+  },
+  // Increase timeout for API routes
+  api: {
+    bodyParser: {
+      sizeLimit: '1mb',
+    },
+    responseLimit: '4mb',
+    externalResolver: true,
   },
 };
 
