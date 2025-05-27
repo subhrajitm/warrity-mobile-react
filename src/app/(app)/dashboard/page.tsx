@@ -7,7 +7,7 @@ import type { Warranty } from '@/types';
 import { WarrantyListItem } from '@/components/warranties/warranty-list-item';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { PlusCircle, List, ShieldX, Loader2, ShieldCheck, Info, Zap, Calendar, Clock, DollarSign, BarChart3 } from 'lucide-react';
+import { PlusCircle, List, ShieldX, Loader2, ShieldCheck, Info, Zap, Calendar, Clock, DollarSign, BarChart3, ChevronRight, CalendarClock } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -22,8 +22,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays, parseISO, format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 
 export default function DashboardPage() {
@@ -329,26 +330,94 @@ export default function DashboardPage() {
 
       {/* All Active Warranties Section */}
       <section className="px-4" id="all-active">
-        <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center">
-             <List className="mr-2 h-5 w-5 text-primary"/> All Active Warranties
-        </h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-foreground flex items-center">
+            <List className="mr-2 h-5 w-5 text-primary"/> All Active Warranties
+          </h2>
+          <Link href="/warranties/all">
+            <Button variant="ghost" size="sm" className="text-xs text-primary hover:text-primary/90">
+              View All <ChevronRight className="ml-1 h-3 w-3" />
+            </Button>
+          </Link>
+        </div>
+        
         {(!activeWarranties || activeWarranties.length === 0) && !isLoadingWarranties && (
-           <div className="text-center py-10 my-4 bg-card rounded-lg shadow">
-            <Info className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
+          <div className="bg-gradient-to-br from-card to-card/50 rounded-xl shadow-sm border border-border/40 p-6 text-center">
+            <div className="bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <Info className="h-8 w-8 text-primary" />
+            </div>
             <h3 className="text-md font-semibold text-foreground mb-1">No Active Warranties</h3>
             <p className="text-xs text-muted-foreground mb-4">Add your first warranty to get started!</p>
-            <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4">
               <Link href="/warranties/add">
                 <PlusCircle className="mr-2 h-4 w-4" /> Add First Warranty
               </Link>
             </Button>
           </div>
         )}
+        
         {activeWarranties && activeWarranties.length > 0 && (
-            <div className="space-y-0">
-            {activeWarranties.map((warranty) => (
-              <WarrantyListItem key={warranty._id} warranty={warranty} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {activeWarranties.slice(0, 6).map((warranty) => (
+              <Link href={`/warranties/${warranty._id}`} key={warranty._id} className="group">
+                <div className="bg-card hover:bg-accent/5 rounded-xl p-3 border border-border/40 shadow-sm transition-all duration-200 hover:shadow-md h-full flex flex-col">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+                        {warranty.product && typeof warranty.product === 'object' && warranty.product.name
+                          ? warranty.product.name
+                          : warranty.productName || 'Unnamed Product'}
+                      </h3>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {warranty.product && typeof warranty.product === 'object' && warranty.product.brand
+                          ? warranty.product.brand
+                          : warranty.productBrand || ''} 
+                        {warranty.product && typeof warranty.product === 'object' && warranty.product.category
+                          ? warranty.product.category
+                          : warranty.productCategory || warranty.category || ''}
+                      </p>
+                    </div>
+                    <div className="ml-2">
+                      {(() => {
+                        if (!warranty.warrantyEndDate) return null;
+                        const endDate = parseISO(warranty.warrantyEndDate);
+                        const daysRemaining = differenceInDays(endDate, new Date());
+                        
+                        if (daysRemaining < 0) {
+                          return <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Expired</Badge>;
+                        } else if (daysRemaining <= 30) {
+                          return <Badge variant="outline" className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0">Expires soon</Badge>;
+                        } else {
+                          return <Badge variant="outline" className="bg-green-100 text-green-800 text-[10px] px-1.5 py-0">Active</Badge>;
+                        }
+                      })()}
+                    </div>
+                  </div>
+                  
+                  <div className="mt-auto pt-2 flex justify-between items-center text-[10px] text-muted-foreground">
+                    <div className="flex items-center">
+                      <CalendarClock className="h-3 w-3 mr-1 text-primary/70" />
+                      <span>
+                        {warranty.warrantyEndDate 
+                          ? format(parseISO(warranty.warrantyEndDate), 'MMM dd, yyyy')
+                          : 'No end date'}
+                      </span>
+                    </div>
+                    <ChevronRight className="h-3 w-3 text-primary/70 group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </div>
+              </Link>
             ))}
+          </div>
+        )}
+        
+        {activeWarranties && activeWarranties.length > 6 && (
+          <div className="mt-4 text-center">
+            <Link href="/warranties/all">
+              <Button variant="outline" size="sm" className="rounded-full">
+                View All {activeWarranties.length} Warranties
+              </Button>
+            </Link>
           </div>
         )}
       </section>
