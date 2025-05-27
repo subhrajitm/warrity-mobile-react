@@ -130,13 +130,26 @@ export const WarrantyProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
-  // Get a single warranty by ID
+  // Get a single warranty by ID with caching to prevent rate limiting
   const getWarrantyById = async (id: string): Promise<Warranty | null> => {
     if (!isAuthenticated || !token) {
       setError('You must be logged in to view warranty details');
       return null;
     }
 
+    // Import the cache utility
+    const { apiCache } = await import('@/lib/cache-utils');
+    
+    // Generate a cache key that includes the warranty ID and token (to ensure user-specific caching)
+    const cacheKey = `warranty_${id}_${token.substring(0, 10)}`;
+    
+    // Check if we have a cached version of this warranty
+    const cachedWarranty = apiCache.get<Warranty>(cacheKey);
+    if (cachedWarranty) {
+      console.log('Using cached warranty data for ID:', id);
+      return cachedWarranty;
+    }
+    
     setIsLoading(true);
     setError(null);
     
@@ -146,10 +159,29 @@ export const WarrantyProvider: React.FC<{ children: ReactNode }> = ({ children }
         { token }
       );
       
+      // Cache the warranty data to prevent future API calls
+      apiCache.set(cacheKey, warranty);
+      
       return warranty;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching warranty details:', err);
-      setError('Failed to fetch warranty details. Please try again later.');
+      
+      // Special handling for rate limiting
+      if (err.status === 429) {
+        setError('Server is busy. Using cached data if available.');
+        
+        // If we're rate limited but have a warranty in the warranties array, use that
+        const existingWarranty = warranties.find(w => w._id === id);
+        if (existingWarranty) {
+          console.log('Using warranty from existing list due to rate limiting');
+          // Cache this for future use
+          apiCache.set(cacheKey, existingWarranty);
+          return existingWarranty;
+        }
+      } else {
+        setError('Failed to fetch warranty details. Please try again later.');
+      }
+      
       return null;
     } finally {
       setIsLoading(false);
@@ -189,12 +221,18 @@ export const WarrantyProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
-  // Update an existing warranty
+  // Update an existing warranty with retry and caching logic
   const updateWarranty = async (id: string, warrantyData: Partial<Warranty>): Promise<Warranty> => {
     if (!isAuthenticated || !token) {
       throw new Error('You must be logged in to update a warranty');
     }
 
+    // Import the cache utility
+    const { apiCache } = await import('@/lib/cache-utils');
+    
+    // Generate a cache key that includes the warranty ID and token
+    const cacheKey = `warranty_${id}_${token.substring(0, 10)}`;
+    
     setIsLoading(true);
     setError(null);
     
@@ -222,10 +260,52 @@ export const WarrantyProvider: React.FC<{ children: ReactNode }> = ({ children }
         )
       );
       
+      // Update the cache with the new warranty data
+      apiCache.set(cacheKey, updatedWarranty);
+      
       return updatedWarranty;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating warranty:', err);
-      const errorMessage = 'Failed to update warranty. Please try again later.';
+      
+      // Special handling for rate limiting
+      if (err.status === 429) {
+        // Create a merged warranty object with the updates
+        const existingWarranty = warranties.find(w => w._id === id);
+        
+        if (existingWarranty) {
+          // Create a merged warranty with the updates
+          const mergedWarranty = {
+            ...existingWarranty,
+            ...warrantyData,
+            _id: id // Ensure ID is preserved
+          };
+          
+          // Update local state with the merged warranty
+          setWarranties(prev => 
+            prev.map(warranty => 
+              warranty._id === id ? mergedWarranty : warranty
+            )
+          );
+          
+          // Also update in expiring warranties if present
+          setExpiringWarranties(prev => 
+            prev.map(warranty => 
+              warranty._id === id ? mergedWarranty : warranty
+            )
+          );
+          
+          // Update the cache with our merged warranty
+          apiCache.set(cacheKey, mergedWarranty);
+          
+          // Return the merged warranty as if it came from the server
+          return mergedWarranty as Warranty;
+        }
+      }
+      
+      const errorMessage = err.status === 429
+        ? 'Server is busy. Please try again in a moment.'
+        : 'Failed to update warranty. Please try again later.';
+      
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {

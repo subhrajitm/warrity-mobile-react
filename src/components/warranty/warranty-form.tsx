@@ -55,8 +55,8 @@ const WarrantyForm: React.FC<WarrantyFormProps> = ({ initialData, isEditing = fa
     resolver: zodResolver(warrantyFormSchema),
     defaultValues: initialData ? {
       ...initialData,
-      purchaseDate: new Date(initialData.purchaseDate),
-      expiryDate: new Date(initialData.expiryDate),
+      purchaseDate: initialData.purchaseDate ? new Date(initialData.purchaseDate) : new Date(),
+      expiryDate: initialData.expiryDate ? new Date(initialData.expiryDate) : new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
       purchasePrice: initialData.purchasePrice?.toString() || '',
     } : {
       productName: '',
@@ -103,9 +103,12 @@ const WarrantyForm: React.FC<WarrantyFormProps> = ({ initialData, isEditing = fa
     }
   };
 
-  // Handle form submission
+  // Handle form submission with simplified error handling
   const onSubmit = async (data: WarrantyFormValues) => {
     try {
+      // Show loading state
+      form.formState.isSubmitting = true;
+      
       // Prepare form data for API
       const warrantyData: Partial<Warranty> = {
         ...data,
@@ -121,23 +124,43 @@ const WarrantyForm: React.FC<WarrantyFormProps> = ({ initialData, isEditing = fa
           title: 'Success',
           description: 'Warranty updated successfully',
         });
+        
+        // Add a small delay before redirect to ensure toast is shown
+        setTimeout(() => {
+          // Only redirect if edit was successful
+          router.push(`/warranties/${initialData._id}`);
+        }, 1500);
       } else {
-        await createWarranty(warrantyData);
+        const newWarranty = await createWarranty(warrantyData);
         toast({
           title: 'Success',
           description: 'Warranty created successfully',
         });
+        
+        // Add a small delay before redirect to ensure toast is shown
+        setTimeout(() => {
+          // Only redirect if creation was successful
+          if (newWarranty && newWarranty._id) {
+            router.push(`/warranties/${newWarranty._id}`);
+          } else {
+            router.push('/warranties');
+          }
+        }, 1500);
       }
-
-      // Redirect to warranties page
-      router.push('/warranties');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error submitting warranty:', err);
+      
+      // Show appropriate error message
       toast({
         title: 'Error',
-        description: 'Failed to save warranty. Please try again.',
+        description: err?.response?.status === 429 
+          ? 'Server is busy. Please wait a moment and try again.'
+          : 'Failed to save warranty. Please try again.',
         variant: 'destructive',
       });
+      
+      // Reset form submission state
+      form.formState.isSubmitting = false;
     }
   };
 
