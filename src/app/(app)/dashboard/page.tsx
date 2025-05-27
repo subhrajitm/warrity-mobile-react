@@ -136,10 +136,18 @@ export default function DashboardPage() {
     deleteMutation.mutate(id);
   };
   
-  const activeWarranties = warranties?.filter(w => 
-    !expiringWarranties?.find(ew => ew._id === w._id) && 
-    w.warrantyEndDate && differenceInDays(parseISO(w.warrantyEndDate), new Date()) >= 0
-  );
+  const activeWarranties = warranties?.filter(w => {
+    // If no end date, consider it active
+    if (!w.warrantyEndDate) return true;
+    
+    try {
+      // Check if the warranty hasn't expired yet
+      return differenceInDays(parseISO(w.warrantyEndDate), new Date()) >= 0;
+    } catch (error) {
+      console.error('Error parsing date:', error, w.warrantyEndDate);
+      return true; // Include warranties with invalid dates as active
+    }
+  });
 
 
   if (isLoadingWarranties) {

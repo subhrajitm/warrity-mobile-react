@@ -59,7 +59,12 @@ export function WarrantyListItem({ warranty, onDeleteClick }: WarrantyListItemPr
             }
           </div>
           <div className="flex-grow">
-            <h3 className="font-semibold text-base text-foreground truncate group-hover:text-primary">{warranty.productName}</h3>
+            <h3 className="font-semibold text-base text-foreground truncate group-hover:text-primary">
+              {/* Handle product name that might be in a product object or directly in the warranty */}
+              {warranty.product && typeof warranty.product === 'object' && warranty.product.name
+                ? warranty.product.name
+                : warranty.productName || 'Unnamed Product'}
+            </h3>
             <p className={cn("text-xs", getStatusColor())}>
               {expiryStatus === 'expiring-soon' && <AlertTriangle className="inline-block h-3 w-3 mr-1" />}
               {expiryText}

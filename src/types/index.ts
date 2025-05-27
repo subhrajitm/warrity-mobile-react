@@ -32,6 +32,14 @@ export interface Warranty {
   warrantyTerms?: string;
   createdAt: string;
   updatedAt: string;
+  product?: {
+    _id: string;
+    name: string;
+    category?: string;
+    brand?: string;
+    modelNumber?: string;
+    description?: string;
+  }; // Product object if populated
 }
 
 export interface Product {

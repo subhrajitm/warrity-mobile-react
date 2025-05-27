@@ -67,7 +67,15 @@ export function WarrantyCard({ warranty, onDelete }: WarrantyCardProps) {
     <Card className={cardClasses}>
       <CardHeader className="px-4 py-3">
         <div className="flex justify-between items-start gap-2">
-          <CardTitle className="text-lg font-semibold mb-0.5 flex-1 min-w-0 truncate" title={warranty.productName}>{warranty.productName}</CardTitle>
+          <CardTitle className="text-lg font-semibold mb-0.5 flex-1 min-w-0 truncate" 
+            title={warranty.product && typeof warranty.product === 'object' && warranty.product.name
+              ? warranty.product.name
+              : warranty.productName || 'Unnamed Product'}
+          >
+            {warranty.product && typeof warranty.product === 'object' && warranty.product.name
+              ? warranty.product.name
+              : warranty.productName || 'Unnamed Product'}
+          </CardTitle>
           {expiryStatus !== 'unknown' && (
              <Badge variant={getExpiryBadgeVariant()} className="ml-auto shrink-0"> {/* Use ml-auto to push badge to the right if productName is short */}
                {expiryStatus === 'expiring-soon' && <AlertTriangle className="h-3 w-3 mr-1" />}

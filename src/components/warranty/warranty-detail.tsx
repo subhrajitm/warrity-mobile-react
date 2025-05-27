@@ -234,8 +234,19 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
     <div className="container mx-auto py-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <div>
-          <h1 className="text-2xl font-bold">{warranty.productName}</h1>
-          <p className="text-sm text-muted-foreground">{warranty.productBrand} • {warranty.productCategory}</p>
+          <h1 className="text-2xl font-bold">
+            {warranty.product && typeof warranty.product === 'object' && warranty.product.name
+              ? warranty.product.name
+              : warranty.productName || 'Unnamed Product'}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {warranty.product && typeof warranty.product === 'object' && warranty.product.brand
+              ? warranty.product.brand
+              : warranty.productBrand} • 
+            {warranty.product && typeof warranty.product === 'object' && warranty.product.category
+              ? warranty.product.category
+              : warranty.productCategory || warranty.category}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={createExpiryReminder}>

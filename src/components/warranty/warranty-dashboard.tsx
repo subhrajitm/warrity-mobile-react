@@ -269,11 +269,20 @@ const WarrantyDashboard = () => {
                     <Card key={warranty._id} className="h-full overflow-hidden border shadow-sm">
                       <div className="p-2 pb-1 border-b">
                         <div className="flex justify-between items-start gap-1 mb-0.5">
-                          <h3 className="font-medium text-xs truncate">{warranty.productName}</h3>
+                          <h3 className="font-medium text-xs truncate">
+                            {warranty.product && typeof warranty.product === 'object' && warranty.product.name
+                              ? warranty.product.name
+                              : warranty.productName || 'Unnamed Product'}
+                          </h3>
                           {getWarrantyStatus(warranty.expiryDate)}
                         </div>
                         <p className="text-[10px] text-muted-foreground truncate">
-                          {warranty.productBrand} • {warranty.productCategory}
+                          {warranty.product && typeof warranty.product === 'object' && warranty.product.brand
+                            ? warranty.product.brand
+                            : warranty.productBrand} • 
+                          {warranty.product && typeof warranty.product === 'object' && warranty.product.category
+                            ? warranty.product.category
+                            : warranty.productCategory || warranty.category}
                         </p>
                       </div>
                       <div className="p-2 py-1 text-[10px] space-y-0.5">
@@ -343,11 +352,20 @@ const WarrantyDashboard = () => {
                     <Card key={warranty._id} className="h-full overflow-hidden border">
                       <div className="p-3 pb-2 border-b">
                         <div className="flex justify-between items-start gap-2 mb-1">
-                          <h3 className="font-medium text-sm truncate">{warranty.productName}</h3>
+                          <h3 className="font-medium text-sm truncate">
+                            {warranty.product && typeof warranty.product === 'object' && warranty.product.name
+                              ? warranty.product.name
+                              : warranty.productName || 'Unnamed Product'}
+                          </h3>
                           {getWarrantyStatus(warranty.expiryDate)}
                         </div>
                         <p className="text-xs text-muted-foreground truncate">
-                          {warranty.productBrand} • {warranty.productCategory}
+                          {warranty.product && typeof warranty.product === 'object' && warranty.product.brand
+                            ? warranty.product.brand
+                            : warranty.productBrand} • 
+                          {warranty.product && typeof warranty.product === 'object' && warranty.product.category
+                            ? warranty.product.category
+                            : warranty.productCategory || warranty.category}
                         </p>
                       </div>
                       <div className="p-3 py-2 text-xs space-y-1">
