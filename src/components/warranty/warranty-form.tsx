@@ -40,9 +40,10 @@ type WarrantyFormValues = z.infer<typeof warrantyFormSchema>;
 interface WarrantyFormProps {
   initialData?: Warranty;
   isEditing?: boolean;
+  isOffline?: boolean;
 }
 
-const WarrantyForm: React.FC<WarrantyFormProps> = ({ initialData, isEditing = false }) => {
+const WarrantyForm: React.FC<WarrantyFormProps> = ({ initialData, isEditing = false, isOffline = false }) => {
   const router = useRouter();
   const { toast } = useToast();
   const { createWarranty, updateWarranty, isLoading, error } = useWarranty();
@@ -167,11 +168,19 @@ const WarrantyForm: React.FC<WarrantyFormProps> = ({ initialData, isEditing = fa
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle>{isEditing ? 'Edit Warranty' : 'Add New Warranty'}</CardTitle>
+        <CardTitle className="flex items-center">
+          {isEditing ? 'Edit Warranty' : 'Add New Warranty'}
+          {isOffline && (
+            <span className="ml-2 text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+              Offline Mode
+            </span>
+          )}
+        </CardTitle>
         <CardDescription>
           {isEditing 
             ? 'Update your warranty information below.' 
             : 'Enter your product warranty details to keep track of it.'}
+          {isOffline && ' Changes will be saved locally until connection is restored.'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -445,9 +454,16 @@ const WarrantyForm: React.FC<WarrantyFormProps> = ({ initialData, isEditing = fa
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? <Spinner className="mr-2" /> : null}
-                {isEditing ? 'Update Warranty' : 'Create Warranty'}
+              <Button 
+                type="submit" 
+                disabled={form.formState.isSubmitting} 
+                className="w-full sm:w-auto"
+                variant={isOffline ? "outline" : "default"}
+              >
+                {form.formState.isSubmitting && <Spinner className="mr-2 h-4 w-4" />}
+                {isEditing 
+                  ? isOffline ? 'Save Changes Locally' : 'Update Warranty' 
+                  : 'Add Warranty'}
               </Button>
             </div>
           </form>

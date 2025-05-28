@@ -4,8 +4,9 @@ import { useWarranty } from '@/contexts/warranty-context';
 import { useToast } from '@/hooks/use-toast';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ArrowLeft, RefreshCw, AlertCircle, Info } from 'lucide-react';
 import WarrantyForm from './warranty-form';
 import { Warranty } from '@/types';
 import Link from 'next/link';
@@ -20,37 +21,52 @@ const WarrantyEditForm: React.FC<WarrantyEditFormProps> = ({ warrantyId }) => {
   const { getWarrantyById, isLoading, error } = useWarranty();
   const [warranty, setWarranty] = useState<Warranty | null>(null);
   const [isLoadingWarranty, setIsLoadingWarranty] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
-  // Fetch warranty data when component mounts with simplified error handling
-  useEffect(() => {
-    // Flag to prevent state updates if component unmounts
-    let isMounted = true;
-    
-    const fetchWarrantyData = async () => {
-      try {
-        setIsLoadingWarranty(true);
-        const data = await getWarrantyById(warrantyId);
-        
-        // Check if component is still mounted
-        if (!isMounted) return;
-        
-        if (data) {
-          setWarranty(data);
-        } else {
+  // Fetch warranty data function that can be called for retries
+  const fetchWarrantyData = async (showToast = true) => {
+    try {
+      setIsLoadingWarranty(true);
+      setLoadError(null);
+      setIsRateLimited(false);
+      setIsRetrying(true);
+      
+      const data = await getWarrantyById(warrantyId);
+      
+      if (data) {
+        setWarranty(data);
+        if (retryCount > 0 && showToast) {
+          toast({
+            title: 'Success',
+            description: 'Warranty data loaded successfully',
+            variant: 'default',
+          });
+        }
+      } else {
+        setLoadError('Warranty not found');
+        if (showToast) {
           toast({
             title: 'Error',
             description: 'Warranty not found',
             variant: 'destructive',
           });
-          // Don't automatically redirect - let user navigate back manually
         }
-      } catch (err: any) {
-        console.error('Error fetching warranty:', err);
-        
-        // Check if component is still mounted
-        if (!isMounted) return;
-        
-        // Show appropriate error message without redirecting
+      }
+    } catch (err: any) {
+      console.error('Error fetching warranty:', err);
+      
+      // Check if rate limited
+      if (err?.response?.status === 429) {
+        setIsRateLimited(true);
+        setLoadError('Server is busy. Please try again in a few moments.');
+      } else {
+        setLoadError(err?.message || 'Failed to load warranty data');
+      }
+      
+      if (showToast) {
         toast({
           title: 'Error',
           description: err?.response?.status === 429 
@@ -58,22 +74,26 @@ const WarrantyEditForm: React.FC<WarrantyEditFormProps> = ({ warrantyId }) => {
             : 'Failed to load warranty data',
           variant: 'destructive',
         });
-      } finally {
-        if (isMounted) {
-          setIsLoadingWarranty(false);
-        }
       }
-    };
+    } finally {
+      setIsLoadingWarranty(false);
+      setIsRetrying(false);
+    }
+  };
 
-    fetchWarrantyData();
-    
-    // Cleanup function to prevent state updates after unmount
-    return () => {
-      isMounted = false;
-    };
-  }, [warrantyId, getWarrantyById, toast]);
+  // Initial data fetch
+  useEffect(() => {
+    fetchWarrantyData(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [warrantyId]);
 
-  // Show error toast if there's an error
+  // Handle retry button click
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    fetchWarrantyData(true);
+  };
+
+  // Show error toast if there's an error from context
   useEffect(() => {
     if (error) {
       toast({
@@ -84,44 +104,131 @@ const WarrantyEditForm: React.FC<WarrantyEditFormProps> = ({ warrantyId }) => {
     }
   }, [error, toast]);
 
-  if (isLoadingWarranty) {
+  if (isLoadingWarranty && !isRetrying) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
+      <div className="flex flex-col justify-center items-center min-h-[400px]">
         <Spinner size="lg" />
+        <p className="mt-4 text-muted-foreground">Loading warranty data...</p>
       </div>
+    );
+  }
+
+  if (loadError && !warranty) {
+    return (
+      <Card className="shadow-md">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <AlertCircle className="h-5 w-5 mr-2 text-destructive" />
+            Error Loading Warranty
+          </CardTitle>
+          <CardDescription>
+            We encountered a problem while loading the warranty data.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert variant={isRateLimited ? "default" : "destructive"} className="mb-4">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <AlertTitle>{isRateLimited ? "Rate Limited" : "Error"}</AlertTitle>
+            <AlertDescription>{loadError}</AlertDescription>
+          </Alert>
+          
+          {isRateLimited && (
+            <div className="bg-muted p-3 rounded-md mb-4">
+              <div className="flex items-start">
+                <Info className="h-4 w-4 mr-2 mt-0.5 text-primary" />
+                <div className="text-sm">
+                  <p className="font-medium">What does this mean?</p>
+                  <p className="text-muted-foreground">The server is currently processing too many requests. This is a temporary issue and your data is safe.</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Link href={`/warranties/${warrantyId}`}>
+            <Button variant="outline">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Details
+            </Button>
+          </Link>
+          <Button 
+            onClick={handleRetry} 
+            disabled={isRetrying}
+            className={isRateLimited ? "bg-primary" : ""}
+          >
+            {isRetrying ? (
+              <>
+                <Spinner className="mr-2 h-4 w-4" />
+                Retrying...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry
+              </>
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
     );
   }
 
   if (!warranty) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center">
-            <h3 className="text-lg font-medium mb-2">Warranty Not Found</h3>
-            <p className="text-muted-foreground mb-4">The warranty you're trying to edit could not be found.</p>
-            <Link href="/warranties">
-              <Button>Back to Warranties</Button>
-            </Link>
-          </div>
+      <Card className="shadow-md">
+        <CardHeader>
+          <CardTitle>Warranty Not Found</CardTitle>
+          <CardDescription>
+            The warranty you're trying to edit could not be found.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">The warranty may have been deleted or you may not have permission to view it.</p>
         </CardContent>
+        <CardFooter>
+          <Link href="/warranties">
+            <Button>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Warranties
+            </Button>
+          </Link>
+        </CardFooter>
       </Card>
     );
   }
 
   return (
     <div>
-      <div className="mb-6">
+      <div className="flex justify-between items-center mb-6">
         <Link href={`/warranties/${warrantyId}`}>
           <Button variant="ghost" className="pl-0">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Warranty Details
           </Button>
         </Link>
+        
+        {isRetrying && (
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Spinner className="mr-2 h-3 w-3" />
+            Refreshing data...
+          </div>
+        )}
       </div>
+      
+      {isRateLimited && (
+        <Alert variant="default" className="mb-6">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Using Cached Data</AlertTitle>
+          <AlertDescription>
+            Due to high server load, we're using cached data. Your changes will be saved locally and synchronized when possible.
+          </AlertDescription>
+        </Alert>
+      )}
       
       <WarrantyForm 
         initialData={warranty} 
         isEditing={true} 
+        isOffline={isRateLimited}
       />
     </div>
   );
