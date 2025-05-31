@@ -7,7 +7,7 @@ import type { Warranty } from '@/types';
 import { WarrantyListItem } from '@/components/warranties/warranty-list-item';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { PlusCircle, List, ShieldX, Loader2, ShieldCheck, Info, Zap, Calendar, Clock, DollarSign, BarChart3, ChevronRight, CalendarClock } from 'lucide-react';
+import { PlusCircle, List, ShieldX, Loader2, ShieldCheck, Info, Zap, Clock, BarChart3, ChevronRight, CalendarClock } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -53,20 +53,13 @@ export default function DashboardPage() {
   const stats = (() => {
     if (!warranties) return {
       totalWarranties: 0,
-      totalValue: 0,
-      totalEvents: 0,
       expiringCount: 0
     };
     
     const totalWarranties = warranties.length;
-    const totalValue = warranties.reduce((sum, w) => sum + (w.purchasePrice || 0), 0);
-    // Get total events count (using a placeholder value since we don't have actual events API data yet)
-    const totalEvents = 0; // This will be replaced with actual API call when events endpoint is ready
       
     return {
       totalWarranties,
-      totalValue,
-      totalEvents,
       expiringCount: expiringWarranties?.length || 0
     };
   })();
@@ -200,7 +193,7 @@ export default function DashboardPage() {
       
       {/* Stats Overview */}
       {stats && (
-        <div className="grid grid-cols-2 gap-3 p-4">
+        <div className="grid grid-cols-2 gap-4 p-4">
           {/* Total Warranties */}
           <Card className="bg-gradient-to-br from-lime-500/20 to-lime-600/10 border-lime-500/20">
             <CardContent className="p-4 flex items-center">
@@ -223,31 +216,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
           
-          {/* Total Value */}
-          <Card className="bg-gradient-to-br from-blue-500/20 to-blue-600/10 border-blue-500/20">
-            <CardContent className="p-4 flex items-center">
-              <DollarSign className="h-8 w-8 mr-3 text-blue-500" />
-              <div>
-                <p className="text-xs text-muted-foreground">Total Value</p>
-                <h3 className="text-2xl font-bold">${stats.totalValue.toLocaleString()}</h3>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Total Events */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-2 bg-primary/10 rounded-full">
-                  <Calendar className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Total Events</p>
-                  <h3 className="text-2xl font-bold">{stats.totalEvents}</h3>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
         </div>
       )}
       
