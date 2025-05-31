@@ -53,9 +53,9 @@ export function LoginForm() {
       {/* Decorative top accent */}
       <div className="h-1 w-full bg-gradient-to-r from-lime-300 via-lime-400 to-lime-300"></div>
       
-      <CardHeader className="space-y-1 p-4 pb-2">
+      <CardHeader className="space-y-1 p-3 pb-2 sm:p-4 sm:pb-2">
         <div className="flex justify-between items-center">
-          <div className="space-y-1">
+          <div className="space-y-0.5 sm:space-y-1">
             <div className="flex items-center gap-1.5">
               <div className="h-3 w-3 rounded-full bg-lime-300 animate-pulse"></div>
               <p className="text-xs font-medium text-lime-300">Secure Login</p>
@@ -64,10 +64,10 @@ export function LoginForm() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-2">
+      <CardContent className="p-3 pt-1 sm:p-4 sm:pt-2">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-3">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <FormField
                 control={form.control}
                 name="email"
@@ -139,7 +139,7 @@ export function LoginForm() {
           </form>
         </Form>
         
-        <div className="mt-5 pt-4 border-t border-gray-800/50">
+        <div className="mt-3 pt-3 sm:mt-5 sm:pt-4 border-t border-gray-800/50">
           <div className="flex justify-between items-center text-xs">
             <Link 
               href="/forgot-password"

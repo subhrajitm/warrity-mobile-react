@@ -122,20 +122,3 @@ body {
     background-color: hsl(var(--accent));
   }
 }
-
-/* Calendar event indicator styles */
-.event-day {
-  position: relative;
-}
-
-.event-day::after {
-  content: '';
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background-color: hsl(var(--primary));
-}

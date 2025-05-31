@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+    <div className="h-[100dvh] flex flex-col items-center justify-center relative overflow-hidden">
       {/* Pattern Background */}
       <div className="absolute inset-0 bg-background opacity-90 z-0"></div>
       <div className="absolute inset-0 z-0">
@@ -23,8 +23,8 @@ export default function LoginPage() {
       </div>
       
       {/* Content */}
-      <div className="z-10 p-6 sm:p-8 flex flex-col items-start w-full max-w-5xl mx-auto">
-        <div className="mb-10 relative self-start max-w-2xl flex">
+      <div className="z-10 p-4 sm:p-8 flex flex-col items-start w-full max-w-5xl mx-auto">
+        <div className="mb-6 sm:mb-10 relative self-start max-w-2xl flex">
           {/* Decorative element with inline styles for guaranteed visibility */}
           <div className="w-1.5 rounded-full mr-4 shadow-md" style={{ backgroundColor: 'hsl(var(--primary))' }}></div>
           
