@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, ShieldCheck, Plus, ShoppingBag, User } from 'lucide-react';
+import { Home, ShieldCheck, Plus, Calendar, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NavItemType { 
@@ -18,7 +18,7 @@ export function MobileBottomNav() {
   const navItems: NavItemType[] = [
     { href: '/dashboard', label: 'Home', icon: Home },
     { href: '/warranties', label: 'Warranties', icon: ShieldCheck },
-    { href: '/products', label: 'Products', icon: ShoppingBag },
+    { href: '/calendar', label: 'Events', icon: Calendar },
     { href: '/profile', label: 'Profile', icon: User },
   ];
 

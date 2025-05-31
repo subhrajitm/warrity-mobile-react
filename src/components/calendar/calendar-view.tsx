@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useCalendar } from '@/contexts/calendar-context';
+import { useCalendar, CalendarEvent } from '@/contexts/calendar-context';
 import { useWarranty } from '@/contexts/warranty-context';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ import { PlusIcon, CalendarIcon, ClockIcon, TrashIcon, PencilIcon } from 'lucide
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { format, isSameDay, parseISO, isAfter, isBefore, addDays } from 'date-fns';
+import { format, parseISO, isSameDay, isAfter, isBefore, addDays, subDays } from 'date-fns';
 import Link from 'next/link';
 
 // Event form schema
@@ -58,10 +58,8 @@ const CalendarView = () => {
     },
   });
   
-  // Fetch events when component mounts
-  useEffect(() => {
-    fetchEvents();
-  }, []);
+  // We don't need to fetch events here as the CalendarProvider already does this
+  // This prevents duplicate API calls when the component mounts
   
   // Show error toast if there's an error
   useEffect(() => {
@@ -105,20 +103,61 @@ const CalendarView = () => {
     }
   }, [selectedEvent, isEditing, form]);
   
+  // Debug log for events data
+  useEffect(() => {
+    console.log('Events in CalendarView:', events);
+    console.log('Events count:', events.length);
+    console.log('Selected date:', selectedDate);
+  }, [events, selectedDate]);
+
   // Filter events for the selected date
-  const eventsForSelectedDate = events.filter(event => 
-    isSameDay(parseISO(event.startDate), selectedDate)
-  );
+  const eventsForSelectedDate = events.filter(event => {
+    try {
+      const eventDate = parseISO(event.startDate);
+      const result = isSameDay(eventDate, selectedDate);
+      console.log('Event date check:', event.title, format(eventDate, 'yyyy-MM-dd'), 'vs', format(selectedDate, 'yyyy-MM-dd'), result);
+      return result;
+    } catch (err) {
+      console.error('Error parsing event date:', event.startDate, err);
+      return false;
+    }
+  });
+  
+  console.log('Events for selected date:', eventsForSelectedDate.length);
   
   // Get upcoming events (next 30 days)
   const upcomingEvents = events
-    .filter(event => 
-      isAfter(parseISO(event.startDate), new Date()) && 
-      isBefore(parseISO(event.startDate), addDays(new Date(), 30))
-    )
+    .filter(event => {
+      try {
+        const eventDate = parseISO(event.startDate);
+        return isAfter(eventDate, new Date()) && isBefore(eventDate, addDays(new Date(), 30));
+      } catch (err) {
+        console.error('Error parsing event date for upcoming events:', event.startDate, err);
+        return false;
+      }
+    })
     .sort((a, b) => 
       parseISO(a.startDate).getTime() - parseISO(b.startDate).getTime()
     );
+    
+  console.log('Upcoming events:', upcomingEvents.length);
+  
+  // Get past events (last 30 days)
+  const pastEvents = events
+    .filter(event => {
+      try {
+        const eventDate = parseISO(event.startDate);
+        return isBefore(eventDate, new Date()) && isAfter(eventDate, subDays(new Date(), 30));
+      } catch (err) {
+        console.error('Error parsing event date for past events:', event.startDate, err);
+        return false;
+      }
+    })
+    .sort((a, b) => 
+      parseISO(b.startDate).getTime() - parseISO(a.startDate).getTime() // Sort by descending date (most recent first)
+    );
+    
+  console.log('Past events:', pastEvents.length);
   
   // Handle form submission
   const onSubmit = async (data: EventFormValues) => {
@@ -130,8 +169,8 @@ const CalendarView = () => {
           endDate: data.endDate.toISOString(),
         });
         toast({
-          title: 'Success',
-          description: 'Event updated successfully',
+          title: 'Event updated',
+          description: 'Your event has been updated successfully.',
         });
       } else {
         await createEvent({
@@ -140,16 +179,15 @@ const CalendarView = () => {
           endDate: data.endDate.toISOString(),
         });
         toast({
-          title: 'Success',
-          description: 'Event created successfully',
+          title: 'Event created',
+          description: 'Your event has been created successfully.',
         });
       }
       setIsDialogOpen(false);
     } catch (err) {
-      console.error('Error saving event:', err);
       toast({
         title: 'Error',
-        description: 'Failed to save event',
+        description: 'There was an error processing your request. Please try again.',
         variant: 'destructive',
       });
     }
@@ -163,15 +201,14 @@ const CalendarView = () => {
       setIsDeleting(true);
       await deleteEvent(selectedEvent._id);
       toast({
-        title: 'Success',
-        description: 'Event deleted successfully',
+        title: 'Event deleted',
+        description: 'Your event has been deleted successfully.',
       });
       setIsDialogOpen(false);
     } catch (err) {
-      console.error('Error deleting event:', err);
       toast({
         title: 'Error',
-        description: 'Failed to delete event',
+        description: 'There was an error deleting the event. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -183,11 +220,11 @@ const CalendarView = () => {
   const getEventTypeBadge = (type: string) => {
     switch (type) {
       case 'warranty':
-        return <Badge variant="secondary">Warranty</Badge>;
+        return <Badge variant="default">Warranty</Badge>;
       case 'service':
-        return <Badge variant="primary">Service</Badge>;
+        return <Badge variant="secondary">Service</Badge>;
       case 'reminder':
-        return <Badge variant="warning">Reminder</Badge>;
+        return <Badge variant="outline">Reminder</Badge>;
       default:
         return <Badge variant="outline">Other</Badge>;
     }
@@ -207,63 +244,43 @@ const CalendarView = () => {
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Calendar</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusIcon className="mr-2 h-4 w-4" />
-              Add Event
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[550px]">
-            <DialogHeader>
-              <DialogTitle>{isEditing ? 'Edit Event' : 'Create New Event'}</DialogTitle>
-              <DialogDescription>
-                {isEditing 
-                  ? 'Update the event details below.' 
-                  : 'Add a new event to your calendar.'}
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title*</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Event title" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description*</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Event description" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              console.log('Manual fetch triggered');
+              fetchEvents();
+            }}
+          >
+            Refresh Events
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusIcon className="mr-2 h-4 w-4" />
+                Add Event
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[550px]">
+              <DialogHeader>
+                <DialogTitle>{isEditing ? 'Edit Event' : 'Create New Event'}</DialogTitle>
+                <DialogDescription>
+                  {isEditing 
+                    ? 'Update the event details below.' 
+                    : 'Add a new event to your calendar.'}
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="startDate"
+                    name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Start Date*</FormLabel>
-                        <DatePicker
-                          date={field.value}
-                          setDate={field.onChange}
-                        />
+                        <FormLabel>Title*</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Event title" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -271,66 +288,99 @@ const CalendarView = () => {
                   
                   <FormField
                     control={form.control}
-                    name="endDate"
+                    name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>End Date*</FormLabel>
-                        <DatePicker
-                          date={field.value}
-                          setDate={field.onChange}
-                        />
+                        <FormLabel>Description*</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Event description" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Event location (optional)" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Event Type*</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="startDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Start Date*</FormLabel>
+                          <FormControl>
+                            <DatePicker 
+                              value={field.value} 
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="endDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>End Date*</FormLabel>
+                          <FormControl>
+                            <DatePicker 
+                              value={field.value} 
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Location</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select event type" />
-                          </SelectTrigger>
+                          <Input placeholder="Event location (optional)" {...field} />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="warranty">Warranty</SelectItem>
-                          <SelectItem value="service">Service</SelectItem>
-                          <SelectItem value="reminder">Reminder</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {(form.watch('type') === 'warranty' || form.watch('type') === 'service') && (
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Event Type*</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select event type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="warranty">Warranty</SelectItem>
+                            <SelectItem value="service">Service</SelectItem>
+                            <SelectItem value="reminder">Reminder</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
                   <FormField
                     control={form.control}
                     name="relatedItemId"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Related Warranty</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select a warranty" />
@@ -349,29 +399,29 @@ const CalendarView = () => {
                       </FormItem>
                     )}
                   />
-                )}
-                
-                <DialogFooter className="gap-2 sm:gap-0">
-                  {isEditing && (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={handleDeleteEvent}
-                      disabled={isDeleting}
-                      className="mr-auto"
-                    >
-                      {isDeleting ? <Spinner className="mr-2" /> : <TrashIcon className="mr-2 h-4 w-4" />}
-                      Delete
+                  
+                  <DialogFooter className="gap-2 sm:gap-0">
+                    {isEditing && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={handleDeleteEvent}
+                        disabled={isDeleting}
+                        className="mr-auto"
+                      >
+                        {isDeleting ? <Spinner className="mr-2" /> : <TrashIcon className="mr-2 h-4 w-4" />}
+                        Delete
+                      </Button>
+                    )}
+                    <Button type="submit">
+                      {isEditing ? 'Update Event' : 'Create Event'}
                     </Button>
-                  )}
-                  <Button type="submit">
-                    {isEditing ? 'Update Event' : 'Create Event'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -386,12 +436,59 @@ const CalendarView = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
-                    className="rounded-md border"
-                  />
+                  {/* Create a map of dates that have events */}
+                  {(() => {
+                    // Create a map of dates with events for easy lookup
+                    const eventDates = events.reduce((dates, event) => {
+                      try {
+                        const date = parseISO(event.startDate);
+                        const dateStr = format(date, 'yyyy-MM-dd');
+                        dates[dateStr] = [...(dates[dateStr] || []), event];
+                        return dates;
+                      } catch (err) {
+                        console.error('Error parsing event date for calendar:', event.startDate, err);
+                        return dates;
+                      }
+                    }, {} as Record<string, CalendarEvent[]>);
+                    
+                    console.log('Event dates map:', Object.keys(eventDates).length, 'dates with events');
+                    
+                    return (
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => date && setSelectedDate(date)}
+                        className="rounded-md border"
+                        modifiers={{
+                          eventDay: (date) => {
+                            const dateStr = format(date, 'yyyy-MM-dd');
+                            return !!eventDates[dateStr];
+                          }
+                        }}
+                        modifiersClassNames={{
+                          eventDay: 'event-day'
+                        }}
+                        components={{
+                          DayContent: (props) => {
+                            // Extract only the props we need and ignore the rest
+                            const { date } = props;
+                            const dateStr = format(date, 'yyyy-MM-dd');
+                            const hasEvents = !!eventDates[dateStr];
+                            return (
+                              <div className="relative w-full h-full flex items-center justify-center">
+                                <div>
+                                  {date.getDate()}
+                                </div>
+                                {hasEvents && (
+                                  <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full bg-lime-400"></div>
+                                )}
+                              </div>
+                            );
+                          }
+                        }}
+                      />                      
+                    );
+                  })()}
                 </div>
                 
                 <div>
@@ -528,6 +625,60 @@ const CalendarView = () => {
                 Add Event
               </Button>
             </CardFooter>
+          </Card>
+          
+          {/* Past Events Section */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Past Events</CardTitle>
+              <CardDescription>
+                Events from the last 30 days
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <Spinner size="lg" />
+                </div>
+              ) : pastEvents.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No past events.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {pastEvents.map((event) => (
+                    <Card key={event._id} className="overflow-hidden border-gray-800">
+                      <CardHeader className="p-4 pb-2 bg-gray-900/50">
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-base">{event.title}</CardTitle>
+                          {getEventTypeBadge(event.type)}
+                        </div>
+                        <CardDescription>
+                          {formatDate(event.startDate)}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0">
+                        <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>
+                      </CardContent>
+                      <CardFooter className="p-4 pt-0">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setIsEditing(true);
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <PencilIcon className="mr-2 h-4 w-4" />
+                          Edit
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
           </Card>
         </div>
       </div>

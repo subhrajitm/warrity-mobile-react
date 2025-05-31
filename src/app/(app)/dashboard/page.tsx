@@ -55,7 +55,6 @@ export default function DashboardPage() {
       totalWarranties: 0,
       totalValue: 0,
       totalEvents: 0,
-      topCategories: [],
       expiringCount: 0
     };
     
@@ -63,24 +62,11 @@ export default function DashboardPage() {
     const totalValue = warranties.reduce((sum, w) => sum + (w.purchasePrice || 0), 0);
     // Get total events count (using a placeholder value since we don't have actual events API data yet)
     const totalEvents = 0; // This will be replaced with actual API call when events endpoint is ready
-    
-    // Group warranties by category
-    const categoryCounts: Record<string, number> = {};
-    warranties.forEach(w => {
-      const category = w.category || 'Uncategorized';
-      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
-    });
-    
-    // Find top categories
-    const topCategories = Object.entries(categoryCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3);
       
     return {
       totalWarranties,
       totalValue,
       totalEvents,
-      topCategories,
       expiringCount: expiringWarranties?.length || 0
     };
   })();
@@ -265,38 +251,7 @@ export default function DashboardPage() {
         </div>
       )}
       
-      {/* Category Breakdown */}
-      {stats && stats.topCategories.length > 0 && (
-        <div className="px-4 pt-2 pb-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold flex items-center">
-                  <BarChart3 className="h-5 w-5 mr-2 text-primary" /> 
-                  Top Categories
-                </h3>
-              </div>
-              <div className="space-y-3">
-                {stats.topCategories.map(([category, count]) => (
-                  <div key={category} className="flex items-center justify-between">
-                    <span className="text-sm">{category}</span>
-                    <div className="flex items-center">
-                      <span className="text-sm font-medium mr-2">{count}</span>
-                      <div className="h-2 bg-primary/20 rounded-full w-24 overflow-hidden">
-                        <div 
-                          className="h-full bg-primary rounded-full" 
-                          style={{ width: `${(count / stats.totalWarranties) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-      
+
       {/* Expiring Soon Section */}
       {(showExpiringSectionContent || showAllClearMessage) && (
         <section className="px-4 pt-4" id="expiring-soon">

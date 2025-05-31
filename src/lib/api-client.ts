@@ -71,7 +71,15 @@ async function apiClient<T>(
       return undefined as T; 
     }
     
-    return response.json();
+    try {
+      const data = await response.json();
+      console.log(`API Response for ${endpoint}:`, data);
+      return data;
+    } catch (error) {
+      const jsonError = error as Error;
+      console.error(`Error parsing JSON from ${endpoint}:`, jsonError);
+      throw new Error(`Failed to parse API response as JSON: ${jsonError.message}`);
+    }
   } catch (error) {
     if (error instanceof Error) {
       // Enhanced error handling for timeout

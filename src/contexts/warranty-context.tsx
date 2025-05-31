@@ -349,8 +349,16 @@ export const WarrantyProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   // Load initial data when authenticated
+  // We use a ref to track if this is the first render to prevent duplicate API calls
+  const initialFetchRef = React.useRef(false);
+  
   useEffect(() => {
-    if (isAuthenticated && token) {
+    // Only fetch data if authenticated and not already fetched
+    if (isAuthenticated && token && !initialFetchRef.current) {
+      // Mark as fetched to prevent duplicate calls
+      initialFetchRef.current = true;
+      
+      // Fetch initial data
       fetchWarranties();
       fetchExpiringWarranties();
     }

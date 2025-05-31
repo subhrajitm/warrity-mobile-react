@@ -176,16 +176,79 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
     if (!warranty) return;
     
     try {
-      // Create an event 30 days before expiry
-      const expiryDate = new Date(warranty.expiryDate);
+      // Debug the warranty object and its expiry date
+      console.log('Warranty object:', warranty);
+      console.log('Expiry date from warranty:', warranty.expiryDate);
+      console.log('Expiry date type:', typeof warranty.expiryDate);
+      
+      // Try different approaches to get a valid date
+      let expiryDate: Date | null = null;
+      
+      // Check if we have a warrantyEndDate field (legacy field mentioned in types)
+      if (warranty.warrantyEndDate) {
+        console.log('Using warrantyEndDate instead:', warranty.warrantyEndDate);
+        expiryDate = new Date(warranty.warrantyEndDate);
+        if (isNaN(expiryDate.getTime())) {
+          console.log('warrantyEndDate is invalid');
+          expiryDate = null;
+        }
+      }
+      
+      // If no valid date from warrantyEndDate, try expiryDate
+      if (!expiryDate && warranty.expiryDate) {
+        // Try to handle different date formats
+        if (typeof warranty.expiryDate === 'string') {
+          // Try ISO format first
+          expiryDate = new Date(warranty.expiryDate);
+          
+          // If that fails, try DD/MM/YYYY format
+          if (isNaN(expiryDate.getTime()) && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(warranty.expiryDate)) {
+            const [day, month, year] = warranty.expiryDate.split('/').map(Number);
+            expiryDate = new Date(year, month - 1, day);
+          }
+          
+          // If that fails, try MM/DD/YYYY format
+          if (isNaN(expiryDate.getTime()) && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(warranty.expiryDate)) {
+            const [month, day, year] = warranty.expiryDate.split('/').map(Number);
+            expiryDate = new Date(year, month - 1, day);
+          }
+        }
+      }
+      
+      // If we still don't have a valid date, try calculating from purchase date and warranty length
+      if ((!expiryDate || isNaN(expiryDate.getTime())) && warranty.purchaseDate && warranty.warrantyLength) {
+        console.log('Calculating from purchase date and warranty length');
+        const purchaseDate = new Date(warranty.purchaseDate);
+        if (!isNaN(purchaseDate.getTime())) {
+          expiryDate = new Date(purchaseDate);
+          expiryDate.setMonth(expiryDate.getMonth() + Number(warranty.warrantyLength));
+        }
+      }
+      
+      // Final validation
+      if (!expiryDate || isNaN(expiryDate.getTime())) {
+        console.error('All attempts to get valid expiry date failed');
+        throw new Error('Could not determine a valid expiry date for this warranty');
+      }
+      
+      console.log('Final valid expiry date:', expiryDate);
+      
+      // Create a reminder date 30 days before expiry
       const reminderDate = new Date(expiryDate);
       reminderDate.setDate(reminderDate.getDate() - 30);
       
+      // Format dates safely
+      const startDateISO = reminderDate.toISOString();
+      const endDateISO = reminderDate.toISOString();
+      
+      console.log('Reminder date:', reminderDate);
+      console.log('Start date ISO:', startDateISO);
+      
       await createEvent({
-        title: `Warranty Expiring: ${warranty.productName}`,
-        description: `Your warranty for ${warranty.productName} (${warranty.productBrand}) will expire on ${formatDate(warranty.expiryDate)}.`,
-        startDate: reminderDate.toISOString(),
-        endDate: reminderDate.toISOString(),
+        title: `Warranty Expiring: ${warranty.productName || 'Product'}`,
+        description: `Your warranty for ${warranty.productName || 'Product'} ${warranty.productBrand ? `(${warranty.productBrand})` : ''} will expire on ${formatDate(expiryDate.toISOString())}.`,
+        startDate: startDateISO,
+        endDate: endDateISO,
         type: 'warranty',
         relatedItemId: warrantyId
       });
@@ -198,7 +261,7 @@ const WarrantyDetail: React.FC<WarrantyDetailProps> = ({ warrantyId }) => {
       console.error('Error creating reminder:', err);
       toast({
         title: 'Error',
-        description: 'Failed to create reminder',
+        description: typeof err === 'object' && err !== null && 'message' in err ? String(err.message) : 'Failed to create reminder',
         variant: 'destructive',
       });
     }
