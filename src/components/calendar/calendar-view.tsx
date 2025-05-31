@@ -55,6 +55,7 @@ const CalendarView = () => {
       endDate: new Date(),
       location: '',
       type: 'reminder',
+      relatedItemId: 'none',
     },
   });
   
@@ -82,6 +83,7 @@ const CalendarView = () => {
         endDate: new Date(),
         location: '',
         type: 'reminder',
+        relatedItemId: 'none',
       });
       setIsEditing(false);
       setSelectedEvent(null);
@@ -98,7 +100,7 @@ const CalendarView = () => {
         endDate: parseISO(selectedEvent.endDate),
         location: selectedEvent.location || '',
         type: selectedEvent.type,
-        relatedItemId: selectedEvent.relatedItemId || '',
+        relatedItemId: selectedEvent.relatedItemId || 'none',
       });
     }
   }, [selectedEvent, isEditing, form]);
@@ -162,22 +164,23 @@ const CalendarView = () => {
   // Handle form submission
   const onSubmit = async (data: EventFormValues) => {
     try {
+      // Process the form data
+      const processedData = {
+        ...data,
+        startDate: data.startDate.toISOString(),
+        endDate: data.endDate.toISOString(),
+        // Convert 'none' value to null or undefined for the relatedItemId
+        relatedItemId: data.relatedItemId === 'none' ? undefined : data.relatedItemId
+      };
+
       if (isEditing && selectedEvent) {
-        await updateEvent(selectedEvent._id, {
-          ...data,
-          startDate: data.startDate.toISOString(),
-          endDate: data.endDate.toISOString(),
-        });
+        await updateEvent(selectedEvent._id, processedData);
         toast({
           title: 'Event updated',
           description: 'Your event has been updated successfully.',
         });
       } else {
-        await createEvent({
-          ...data,
-          startDate: data.startDate.toISOString(),
-          endDate: data.endDate.toISOString(),
-        });
+        await createEvent(processedData);
         toast({
           title: 'Event created',
           description: 'Your event has been created successfully.',
@@ -244,24 +247,32 @@ const CalendarView = () => {
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Calendar</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           <Button 
-            variant="outline" 
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
             onClick={() => {
               console.log('Manual fetch triggered');
               fetchEvents();
             }}
+            title="Refresh Events"
           >
-            Refresh Events
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+              <path d="M21 3v5h-5"/>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+              <path d="M3 21v-5h5"/>
+            </svg>
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <PlusIcon className="mr-2 h-4 w-4" />
+              <Button size="sm" className="px-2 py-1 h-8">
+                <PlusIcon className="mr-1 h-3.5 w-3.5" />
                 Add Event
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[550px]">
+            <DialogContent className="w-[95vw] max-w-[550px] p-4 sm:p-6 overflow-y-auto max-h-[90vh]">
               <DialogHeader>
                 <DialogTitle>{isEditing ? 'Edit Event' : 'Create New Event'}</DialogTitle>
                 <DialogDescription>
@@ -271,7 +282,7 @@ const CalendarView = () => {
                 </DialogDescription>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
                   <FormField
                     control={form.control}
                     name="title"
@@ -350,70 +361,72 @@ const CalendarView = () => {
                     )}
                   />
                   
-                  <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Event Type*</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select event type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="warranty">Warranty</SelectItem>
-                            <SelectItem value="service">Service</SelectItem>
-                            <SelectItem value="reminder">Reminder</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Event Type*</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select event type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="warranty">Warranty</SelectItem>
+                              <SelectItem value="service">Service</SelectItem>
+                              <SelectItem value="reminder">Reminder</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="relatedItemId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Related Warranty</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select a warranty" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              {warranties.map((warranty) => (
+                                <SelectItem key={warranty._id} value={warranty._id}>
+                                  {warranty.productName} ({warranty.productBrand})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   
-                  <FormField
-                    control={form.control}
-                    name="relatedItemId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Related Warranty</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a warranty" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="">None</SelectItem>
-                            {warranties.map((warranty) => (
-                              <SelectItem key={warranty._id} value={warranty._id}>
-                                {warranty.productName} ({warranty.productBrand})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <DialogFooter className="gap-2 sm:gap-0">
+                  <DialogFooter className="flex-col sm:flex-row gap-2 mt-6">
                     {isEditing && (
                       <Button
                         type="button"
                         variant="destructive"
                         onClick={handleDeleteEvent}
                         disabled={isDeleting}
-                        className="mr-auto"
+                        className="w-full sm:w-auto sm:mr-auto"
                       >
                         {isDeleting ? <Spinner className="mr-2" /> : <TrashIcon className="mr-2 h-4 w-4" />}
                         Delete
                       </Button>
                     )}
-                    <Button type="submit">
+                    <Button type="submit" className="w-full sm:w-auto">
                       {isEditing ? 'Update Event' : 'Create Event'}
                     </Button>
                   </DialogFooter>
