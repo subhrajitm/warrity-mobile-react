@@ -155,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Effect for redirecting if not authenticated
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && !['/login', '/register'].includes(pathname)) {
+    if (!isLoading && !isAuthenticated && !['/login', '/register', '/forgot-password'].includes(pathname)) {
         if (pathname !== '/') router.push('/login');
     }
   }, [isLoading, isAuthenticated, pathname, router]);

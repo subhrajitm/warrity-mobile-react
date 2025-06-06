@@ -10,8 +10,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'; // Removed
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/contexts/auth-context';
 import Link from 'next/link';
-import { Eye, EyeOff, ArrowUpRight, ArrowRightCircle, Loader2, Mail, Lock, LogIn } from 'lucide-react';
+import { Eye, EyeOff, ArrowUpRight, ArrowRightCircle, Loader2, Mail, Lock, LogIn, Phone } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const loginSchema = z.object({
   // To match the visual "username" but retain email functionality for the backend:
@@ -21,7 +22,13 @@ const loginSchema = z.object({
   password: z.string().min(1, { message: "Password is required." }), // Min 1 to match image simplicity
 });
 
+const phoneLoginSchema = z.object({
+  phone: z.string().min(10, { message: "Please enter a valid phone number." }),
+  password: z.string().min(1, { message: "Password is required." }),
+});
+
 type LoginFormValues = z.infer<typeof loginSchema>;
+type PhoneLoginFormValues = z.infer<typeof phoneLoginSchema>;
 
 export function LoginForm() {
   const { login, loginWithGoogle, loginWithApple } = useAuth();
@@ -29,6 +36,7 @@ export function LoginForm() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState("email");
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -38,11 +46,30 @@ export function LoginForm() {
     },
   });
 
+  const phoneForm = useForm<PhoneLoginFormValues>({
+    resolver: zodResolver(phoneLoginSchema),
+    defaultValues: {
+      phone: "",
+      password: "",
+    },
+  });
+
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
       // The auth context expects an 'email' field in the credentials object.
       await login({ email: data.email, password: data.password });
+    } catch (error) {
+      // Error toast is handled by AuthContext
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onPhoneSubmit = async (data: PhoneLoginFormValues) => {
+    setIsLoading(true);
+    try {
+      await login({ phone: data.phone, password: data.password });
     } catch (error) {
       // Error toast is handled by AuthContext
     } finally {
@@ -89,79 +116,164 @@ export function LoginForm() {
         </div>
       </CardHeader>
       <CardContent className="p-3 pt-1 sm:p-4 sm:pt-2">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            <div className="space-y-2 sm:space-y-3">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <div className="relative">
-                      <FormControl>
-                        <Input 
-                          type="email"
-                          placeholder="Email"
-                          className="bg-gray-800/80 border-gray-700 text-white placeholder:text-gray-500 rounded-md h-10 pl-9 text-sm focus-visible:ring-lime-300 focus-visible:border-lime-300/50 transition-colors" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                        <Mail className="h-4 w-4" />
-                      </div>
-                    </div>
-                    <FormMessage className="text-red-400 text-xs" />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <div className="relative">
-                      <FormControl>
-                        <Input 
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Password"
-                          className="bg-gray-800/80 border-gray-700 text-white placeholder:text-gray-500 rounded-md h-10 pl-9 pr-9 text-sm focus-visible:ring-lime-300 focus-visible:border-lime-300/50 transition-colors"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                        <Lock className="h-4 w-4" />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-gray-400 hover:text-lime-300 hover:bg-transparent transition-colors"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
-                      </Button>
-                    </div>
-                    <FormMessage className="text-red-400 text-xs" />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-lime-300 to-lime-400 text-black hover:from-lime-400 hover:to-lime-500 rounded-md h-10 text-sm font-medium flex items-center justify-center gap-1.5 shadow-md shadow-lime-900/20 transition-all" 
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <LogIn className="h-4 w-4" />
-              )}
-              Sign in
-            </Button>
-          </form>
-        </Form>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4 bg-gray-800/50">
+            <TabsTrigger value="email" className="text-xs">Email</TabsTrigger>
+            <TabsTrigger value="phone" className="text-xs">Phone</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="email">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <div className="relative">
+                          <FormControl>
+                            <Input 
+                              type="email"
+                              placeholder="Email"
+                              className="bg-gray-800/80 border-gray-700 text-white placeholder:text-gray-500 rounded-md h-9 pl-9 text-sm focus-visible:ring-lime-300 focus-visible:border-lime-300/50 transition-colors" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                            <Mail className="h-4 w-4" />
+                          </div>
+                        </div>
+                        <FormMessage className="text-red-400 text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <div className="relative">
+                          <FormControl>
+                            <Input 
+                              type={showPassword ? "text" : "password"}
+                              placeholder="Password"
+                              className="bg-gray-800/80 border-gray-700 text-white placeholder:text-gray-500 rounded-md h-9 pl-9 pr-9 text-sm focus-visible:ring-lime-300 focus-visible:border-lime-300/50 transition-colors"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                            <Lock className="h-4 w-4" />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-gray-400 hover:text-lime-300 hover:bg-transparent transition-colors"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                          </Button>
+                        </div>
+                        <FormMessage className="text-red-400 text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-lime-300 to-lime-400 text-black hover:from-lime-400 hover:to-lime-500 rounded-md h-9 text-sm font-medium flex items-center justify-center gap-1.5 shadow-md shadow-lime-900/20 transition-all" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogIn className="h-4 w-4" />
+                  )}
+                  Sign in
+                </Button>
+              </form>
+            </Form>
+          </TabsContent>
+
+          <TabsContent value="phone">
+            <Form {...phoneForm}>
+              <form onSubmit={phoneForm.handleSubmit(onPhoneSubmit)} className="space-y-3">
+                <div className="space-y-2">
+                  <FormField
+                    control={phoneForm.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <div className="relative">
+                          <FormControl>
+                            <Input 
+                              type="tel"
+                              placeholder="Phone number"
+                              className="bg-gray-800/80 border-gray-700 text-white placeholder:text-gray-500 rounded-md h-9 pl-9 text-sm focus-visible:ring-lime-300 focus-visible:border-lime-300/50 transition-colors" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                            <Phone className="h-4 w-4" />
+                          </div>
+                        </div>
+                        <FormMessage className="text-red-400 text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={phoneForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <div className="relative">
+                          <FormControl>
+                            <Input 
+                              type={showPassword ? "text" : "password"}
+                              placeholder="Password"
+                              className="bg-gray-800/80 border-gray-700 text-white placeholder:text-gray-500 rounded-md h-9 pl-9 pr-9 text-sm focus-visible:ring-lime-300 focus-visible:border-lime-300/50 transition-colors"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                            <Lock className="h-4 w-4" />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-gray-400 hover:text-lime-300 hover:bg-transparent transition-colors"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                          </Button>
+                        </div>
+                        <FormMessage className="text-red-400 text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-lime-300 to-lime-400 text-black hover:from-lime-400 hover:to-lime-500 rounded-md h-9 text-sm font-medium flex items-center justify-center gap-1.5 shadow-md shadow-lime-900/20 transition-all" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogIn className="h-4 w-4" />
+                  )}
+                  Sign in
+                </Button>
+              </form>
+            </Form>
+          </TabsContent>
+        </Tabs>
 
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
@@ -176,7 +288,7 @@ export function LoginForm() {
           <Button
             type="button"
             variant="outline"
-            className="w-full bg-white hover:bg-gray-100 text-gray-900 border-gray-200 hover:border-gray-300 rounded-md h-10 text-sm font-medium flex items-center justify-center gap-2 transition-all"
+            className="w-full bg-white hover:bg-gray-100 text-gray-900 border-gray-200 hover:border-gray-300 rounded-md h-9 text-sm font-medium flex items-center justify-center gap-2 transition-all"
             onClick={handleGoogleLogin}
             disabled={isGoogleLoading}
           >
@@ -208,18 +320,18 @@ export function LoginForm() {
           <Button
             type="button"
             variant="outline"
-            className="w-full bg-black hover:bg-gray-900 text-white border-gray-800 hover:border-gray-700 rounded-md h-10 text-sm font-medium flex items-center justify-center gap-2 transition-all"
+            className="w-full bg-black hover:bg-gray-900 text-white border-gray-800 hover:border-gray-700 rounded-md h-9 text-sm font-medium flex items-center justify-center gap-2 transition-all"
             onClick={handleAppleLogin}
             disabled={isAppleLoading}
           >
             {isAppleLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.05 20.28c-.98.95-2.05.88-3.08.41-1.09-.47-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.41C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.78 1.18-.19 2.31-.89 3.51-.84 1.54.07 2.7.61 3.44 1.57-3.14 1.88-2.29 5.13.22 6.41-.65 1.29-1.51 2.58-2.25 4.05zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
               </svg>
             )}
-            Apple
+            <span className="text-white">Apple</span>
           </Button>
         </div>
         
