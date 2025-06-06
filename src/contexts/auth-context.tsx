@@ -24,6 +24,8 @@ interface AuthContextType {
   updateUserProfile: (userData: Partial<User>) => Promise<void>; // New function
   uploadProfilePicture: (file: File) => Promise<void>; // New function
   updateUserInContext: (updatedUser: User) => void;
+  loginWithGoogle: () => Promise<void>; // Add Google login function
+  loginWithApple: () => Promise<void>; // Add Apple login function
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -339,6 +341,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      const data = await apiClient<AuthResponse>('/auth/google', { method: 'POST' });
+      handleAuthSuccess(data);
+      toast({ title: "Login Successful", description: `Welcome back, ${data.user.username}!` });
+    } catch (error) {
+      const apiError = error as Error & { data?: ApiErrorResponse };
+      toast({ title: "Google Login Failed", description: apiError.data?.message || apiError.message, variant: "destructive" });
+      throw error;
+    }
+  };
+
+  const loginWithApple = async () => {
+    try {
+      const data = await apiClient<AuthResponse>('/auth/apple', { method: 'POST' });
+      handleAuthSuccess(data);
+      toast({ title: "Login Successful", description: `Welcome back, ${data.user.username}!` });
+    } catch (error) {
+      const apiError = error as Error & { data?: ApiErrorResponse };
+      toast({ title: "Apple Login Failed", description: apiError.data?.message || apiError.message, variant: "destructive" });
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -356,7 +382,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       fetchUserProfile, 
       updateUserProfile,
       uploadProfilePicture,
-      updateUserInContext 
+      updateUserInContext,
+      loginWithGoogle,
+      loginWithApple
     }}>
       {children}
     </AuthContext.Provider>
