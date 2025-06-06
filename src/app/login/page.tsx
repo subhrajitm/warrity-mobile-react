@@ -14,10 +14,10 @@ export default function LoginPage() {
       <div className="absolute inset-0 z-0">
         {/* Animated background pattern similar to the provided SVG */}
         <div className="curved-line-container">
-          <svg className="curved-line-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+          <svg className="curved-line-svg w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <path id="curvePath" d="M 0 200 Q 200 0 400 200" />
-              <path id="diagonalPath" d="M -100 500 L 500 -100" />
+              {/* <path id="curvePath" d="M 0 50 Q 50 0 100 50" /> */}
+              <path id="diagonalPath" d="M -20 120 L 120 -20" />
             </defs>
             
             {/* Curved lines with progressive animation */}
@@ -27,7 +27,7 @@ export default function LoginPage() {
                   key={`curve-${i}`} 
                   xlinkHref="#curvePath" 
                   className="animated-path" 
-                  transform={`translate(0,${i * 10})`} 
+                  transform={`translate(0,${i * 2})`} 
                   style={{ animationDelay: `${i * 0.2}s` }}
                 />
               ))}
@@ -40,7 +40,7 @@ export default function LoginPage() {
                   key={`diagonal-${i}`} 
                   xlinkHref="#diagonalPath" 
                   className="animated-path" 
-                  transform={`translate(${i * 10},0)`} 
+                  transform={`translate(${i * 2},0)`} 
                   style={{ animationDelay: `${i * 0.2}s` }}
                 />
               ))}
