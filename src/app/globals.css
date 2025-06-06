@@ -7,6 +7,72 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Login page pattern animations */
+@keyframes path-draw {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes subtle-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes subtle-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes subtle-pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes path-trace {
+  0% {
+    stroke-dashoffset: 1000;
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0.3;
+  }
+}
+
 @layer base {
   :root {
     /* Improved Theme with better contrast */
@@ -103,6 +169,82 @@ body {
   body {
     @apply bg-background text-foreground;
     -webkit-tap-highlight-color: transparent; /* Improve mobile tap feel */
+  }
+  
+  /* Login page pattern animation classes */
+  .curved-line-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  .curved-line-svg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0.7;
+  }
+  
+  .curved-line {
+    fill: none;
+    stroke: hsl(var(--primary)/0.2);
+    stroke-width: 1.5px;
+    stroke-linecap: round;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: path-draw 8s ease-in-out forwards;
+  }
+  
+  .animated-path {
+    fill: none;
+    stroke: hsl(var(--primary)/0.2);
+    stroke-width: 1.5px;
+    stroke-linecap: round;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: draw 4s forwards ease-in-out;
+  }
+  
+  .curved-line-group {
+    animation: subtle-float 15s ease-in-out infinite;
+  }
+  
+  .curved-line-parallel {
+    fill: none;
+    stroke: hsl(var(--primary)/0.15);
+    stroke-width: 1.5px;
+    stroke-linecap: round;
+  }
+  
+  .curved-circle {
+    fill: none;
+    stroke: hsl(var(--primary)/0.15);
+    stroke-width: 1.5px;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: path-trace 15s ease-in-out infinite;
+  }
+  
+  .curved-circle-group {
+    transform-origin: center;
+    animation: subtle-rotate 120s linear infinite;
+  }
+  
+  .diagonal-lines {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0.1;
+    animation: fade-in 2s ease-in-out forwards, subtle-pulse 8s ease-in-out infinite;
+  }
+  
+  .diagonal-line {
+    position: absolute;
+    height: 1px;
+    width: 100%;
+    background-color: hsl(var(--primary)/0.6);
+    transform-origin: left center;
   }
   /* Custom scrollbar for a more modern look */
   ::-webkit-scrollbar {

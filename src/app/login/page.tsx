@@ -12,14 +12,63 @@ export default function LoginPage() {
       {/* Pattern Background */}
       <div className="absolute inset-0 bg-background opacity-90 z-0"></div>
       <div className="absolute inset-0 z-0">
-        {/* Dot pattern */}
-        <div className="absolute inset-0" style={{ 
-          backgroundImage: `radial-gradient(circle, rgba(22, 163, 74, 0.1) 1px, transparent 1px)`, 
-          backgroundSize: '20px 20px' 
-        }}></div>
-        {/* Gradient overlays */}
+        {/* Animated background pattern similar to the provided SVG */}
+        <div className="curved-line-container">
+          <svg className="curved-line-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <path id="curvePath" d="M 0 200 Q 200 0 400 200" />
+              <path id="diagonalPath" d="M -100 500 L 500 -100" />
+            </defs>
+            
+            {/* Curved lines with progressive animation */}
+            <g className="curved-lines-group">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <use 
+                  key={`curve-${i}`} 
+                  xlinkHref="#curvePath" 
+                  className="animated-path" 
+                  transform={`translate(0,${i * 10})`} 
+                  style={{ animationDelay: `${i * 0.2}s` }}
+                />
+              ))}
+            </g>
+            
+            {/* Diagonal lines with progressive animation */}
+            <g className="diagonal-lines-group">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <use 
+                  key={`diagonal-${i}`} 
+                  xlinkHref="#diagonalPath" 
+                  className="animated-path" 
+                  transform={`translate(${i * 10},0)`} 
+                  style={{ animationDelay: `${i * 0.2}s` }}
+                />
+              ))}
+            </g>
+          </svg>
+        </div>
+        
+        {/* Additional diagonal lines */}
+        <div className="diagonal-lines">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div 
+              key={i} 
+              className="diagonal-line" 
+              style={{ 
+                top: `${5 + i * 8}%`, 
+                transform: `rotate(${45}deg)`,
+                opacity: 0.05 + (i * 0.01)
+              }}
+            />
+          ))}
+        </div>
+        
+        {/* Gradient overlays for vignette effect */}
+        <div className="absolute inset-0 bg-gradient-radial from-transparent to-background opacity-70"></div>
         <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-background to-transparent"></div>
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background to-transparent"></div>
+        <div className="absolute left-0 top-0 bottom-0 w-40 bg-gradient-to-r from-background to-transparent"></div>
+        <div className="absolute right-0 top-0 bottom-0 w-40 bg-gradient-to-l from-background to-transparent"></div>
       </div>
       
       {/* Content */}
